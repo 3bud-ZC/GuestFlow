@@ -75,3 +75,16 @@ export async function disconnectAirbnbAction(roomId: string, propertyId: string)
   await roomService.disconnectAirbnbConnection(roomId);
   revalidatePath(`/properties/${propertyId}`);
 }
+
+export async function connectAirbnbAction(roomId: string, propertyId: string, formData: FormData) {
+  const user = await getCurrentUser();
+  if (user?.role !== Role.ADMIN) throw new Error("Unauthorized");
+  
+  const airbnbIcalUrl = formData.get("airbnbIcalUrl") as string;
+  const airbnbListingId = formData.get("airbnbListingId") as string || undefined;
+  const airbnbCalendarName = formData.get("airbnbCalendarName") as string || undefined;
+
+  const result = await roomService.connectAirbnbConnection(roomId, airbnbIcalUrl, airbnbListingId, airbnbCalendarName);
+  revalidatePath(`/properties/${propertyId}`);
+  return result;
+}

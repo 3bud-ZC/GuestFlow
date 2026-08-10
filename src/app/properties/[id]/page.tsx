@@ -57,7 +57,7 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
                 </div>
               ) : (
                 property.rooms.map((room) => (
-                  <RoomRow key={room.id} room={room} isAdmin={isAdmin} propertyId={property.id} />
+                  <RoomRow key={room.id} room={{...room, airbnbIcalUrl: !!room.airbnbIcalUrl as any}} isAdmin={isAdmin} propertyId={property.id} />
                 ))
               )}
             </div>

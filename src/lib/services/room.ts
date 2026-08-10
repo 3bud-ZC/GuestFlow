@@ -28,11 +28,20 @@ export const roomService = {
         throw new Error("Invalid Airbnb calendar URL.");
       }
 
-      const existing = await db.room.findUnique({
+      const existing = await db.room.findFirst({
         where: { airbnbIcalUrl: validData.airbnbIcalUrl }
       });
       if (existing) {
-        throw new Error("This Airbnb listing is already connected to another room.");
+        throw new Error("This Airbnb URL is already connected to another room.");
+      }
+
+      if (validData.airbnbListingId) {
+        const existingListing = await db.room.findFirst({
+          where: { airbnbListingId: validData.airbnbListingId, airbnbIcalUrl: { not: null } }
+        });
+        if (existingListing) {
+          throw new Error("This Airbnb listing ID is already actively connected to another room.");
+        }
       }
     }
     
@@ -77,5 +86,41 @@ export const roomService = {
         airbnbLastSyncError: null,
       }
     });
+  },
+
+  async connectAirbnbConnection(roomId: string, airbnbIcalUrl: string, airbnbListingId?: string, airbnbCalendarName?: string) {
+    const { airbnbService } = await import('./airbnb');
+    if (!airbnbService.validateUrl(airbnbIcalUrl)) {
+      throw new Error("Invalid Airbnb calendar URL.");
+    }
+
+    const existingUrl = await db.room.findFirst({
+      where: { airbnbIcalUrl }
+    });
+    if (existingUrl && existingUrl.id !== roomId) {
+      throw new Error("This Airbnb URL is already connected to another room.");
+    }
+
+    if (airbnbListingId) {
+      const existingListing = await db.room.findFirst({
+        where: { airbnbListingId, airbnbIcalUrl: { not: null } }
+      });
+      if (existingListing && existingListing.id !== roomId) {
+        throw new Error("This Airbnb listing ID is already actively connected to another room.");
+      }
+    }
+
+    await db.room.update({
+      where: { id: roomId },
+      data: {
+        airbnbIcalUrl,
+        airbnbListingId: airbnbListingId || null,
+        airbnbCalendarName: airbnbCalendarName || null,
+        airbnbSyncEnabled: true,
+      }
+    });
+
+    const { syncService } = await import('./sync');
+    return await syncService.syncRoom(roomId);
   }
 };
