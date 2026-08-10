@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { getPropertiesAndRooms, probeAirbnbUrl, connectExistingRoom, connectNewRoom } from "./actions";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import { CheckCircle2, ChevronDown, ChevronRight, HelpCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronRight, HelpCircle, Loader2, AlertCircle } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 import { useRouter } from "next/navigation";
@@ -42,6 +42,11 @@ export function AirbnbWizard() {
           if (data.length > 0) setSelectedPropertyId(data[0].id);
           setLoadingProps(false);
         }
+      }).catch(() => {
+        if (isMounted) {
+          setLoadingProps(false);
+          setError("Failed to load properties. Please refresh the page.");
+        }
       });
       return () => {
         isMounted = false;
@@ -54,15 +59,21 @@ export function AirbnbWizard() {
   };
 
   const handleTestConnection = async () => {
-    if (!icalUrl) return;
+    if (!icalUrl.trim()) return;
     setError("");
     setProbing(true);
+    setProbeResult(null);
     try {
-      const res = await probeAirbnbUrl(icalUrl);
-      setProbeResult(res);
-      setStep(3);
+      const res = await probeAirbnbUrl(icalUrl.trim());
+      if (!res.healthy) {
+        // Show localized error if available
+        setError(res.error || "Could not reach the Airbnb calendar. Please verify the Export Calendar link and try again.");
+      } else {
+        setProbeResult(res);
+        setStep(3);
+      }
     } catch (e: any) {
-      setError(e.message || "Invalid Airbnb Calendar URL");
+      setError(e.message || "Could not reach the Airbnb calendar. Please verify the Export Calendar link and try again.");
     } finally {
       setProbing(false);
     }
@@ -73,19 +84,33 @@ export function AirbnbWizard() {
     setConnecting(true);
     try {
       if (mode === "existing") {
-        await connectExistingRoom(selectedRoomId, icalUrl);
+        if (!selectedRoomId) {
+          setError("Please select a room to connect.");
+          setConnecting(false);
+          return;
+        }
+        await connectExistingRoom(selectedRoomId, icalUrl.trim());
       } else {
-        await connectNewRoom(selectedPropertyId, roomName, icalUrl);
+        if (!roomName.trim()) {
+          setError("Please enter a room name.");
+          setConnecting(false);
+          return;
+        }
+        await connectNewRoom(selectedPropertyId, roomName.trim(), icalUrl.trim());
       }
+      // Navigate to the property page
       router.push(`/properties/${selectedPropertyId}`);
       router.refresh();
     } catch (e: any) {
-      setError(e.message || "Failed to connect calendar");
+      setError(e.message || "Failed to connect calendar. Please try again.");
       setConnecting(false);
     }
   };
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId);
+
+  // Validate if test connection button should be enabled
+  const canTest = !!icalUrl.trim() && (mode === "existing" ? !!selectedRoomId : !!roomName.trim());
 
   return (
     <Card>
@@ -135,6 +160,9 @@ export function AirbnbWizard() {
                     }}
                     className="w-full rounded border border-slate-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
                   >
+                    {properties.length === 0 && (
+                      <option value="">No properties found — add a property first</option>
+                    )}
                     {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
@@ -149,9 +177,12 @@ export function AirbnbWizard() {
                     >
                       <option value="">{t.airbnb.chooseRoom}</option>
                       {selectedProperty?.rooms.map((r: any) => (
-                        <option key={r.id} value={r.id} disabled={r.airbnbIcalUrl}>{r.name} {r.airbnbIcalUrl ? t.airbnb.alreadyConnected : ""}</option>
+                        <option key={r.id} value={r.id} disabled={!!r.airbnbIcalUrl}>{r.name} {r.airbnbIcalUrl ? t.airbnb.alreadyConnected : ""}</option>
                       ))}
                     </select>
+                    {selectedProperty?.rooms.length === 0 && (
+                      <p className="text-sm text-amber-600 mt-1">No rooms in this property. Switch to "New Room" mode to create one.</p>
+                    )}
                   </div>
                 ) : (
                   <div>
@@ -171,7 +202,10 @@ export function AirbnbWizard() {
                   <input 
                     type="url" 
                     value={icalUrl}
-                    onChange={e => setIcalUrl(e.target.value)}
+                    onChange={e => {
+                      setIcalUrl(e.target.value);
+                      setError(""); // Clear error when URL changes
+                    }}
                     className="w-full rounded border border-slate-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500 text-left ltr"
                     placeholder={t.airbnb.airbnbCalendarLinkPlaceholder}
                     dir="ltr"
@@ -200,17 +234,26 @@ export function AirbnbWizard() {
                   </div>
                 </div>
 
-                {error && <div className="text-red-600 text-sm">{error}</div>}
+                {error && (
+                  <div className="flex items-start gap-2 text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                )}
 
                 <div className="flex justify-between pt-2">
-                  <Button type="button" variant="outline" onClick={() => setStep(1)}>{t.airbnb.back}</Button>
+                  <Button type="button" variant="outline" onClick={() => { setStep(1); setError(""); }}>{t.airbnb.back}</Button>
                   <Button 
                     type="button" 
                     onClick={handleTestConnection} 
-                    disabled={probing || !icalUrl || (mode === "existing" ? !selectedRoomId : !roomName)}
+                    disabled={probing || !canTest}
                     className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
-                    {probing ? t.airbnb.testing : t.airbnb.testConnection} <ChevronRight className="w-4 h-4 rtl:rotate-180 ml-1 rtl:ml-0 rtl:mr-1" />
+                    {probing ? (
+                      <><Loader2 className="w-4 h-4 animate-spin mr-1" />{t.airbnb.testing}</>
+                    ) : (
+                      <>{t.airbnb.testConnection} <ChevronRight className="w-4 h-4 rtl:rotate-180 ml-1 rtl:ml-0 rtl:mr-1" /></>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -247,17 +290,24 @@ export function AirbnbWizard() {
                 </div>
               </div>
 
-              {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
+              {error && (
+                <div className="flex items-start gap-2 text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
 
               <div className="flex justify-between">
-                <Button type="button" variant="outline" onClick={() => setStep(2)}>{t.airbnb.back}</Button>
+                <Button type="button" variant="outline" onClick={() => { setStep(2); setError(""); }}>{t.airbnb.back}</Button>
                 <Button 
                   type="button" 
                   onClick={handleConnect}
                   disabled={connecting}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  {connecting ? t.airbnb.connecting : t.airbnb.connectRoom}
+                  {connecting ? (
+                    <><Loader2 className="w-4 h-4 animate-spin mr-1" />{t.airbnb.connecting}</>
+                  ) : t.airbnb.connectRoom}
                 </Button>
               </div>
             </div>

@@ -28,7 +28,8 @@ export const calendarService = {
           status: true,
           platform: true,
           guest: { select: { firstName: true, lastName: true } },
-          roomId: true
+          roomId: true,
+          room: { select: { name: true } }, // Include room name
         }
       }),
       db.availabilityBlock.findMany({
@@ -38,7 +39,8 @@ export const calendarService = {
           startDate: true,
           endDate: true,
           reason: true,
-          roomId: true
+          roomId: true,
+          room: { select: { name: true } }, // Include room name
         }
       })
     ]);

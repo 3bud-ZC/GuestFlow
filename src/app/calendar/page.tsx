@@ -135,16 +135,18 @@ export default async function CalendarPage({
                     let color = "bg-blue-100 text-blue-800 border-blue-200";
                     if (r.platform === 'AIRBNB') color = "bg-rose-100 text-rose-800 border-rose-200";
                     else if (r.platform === 'BOOKING') color = "bg-indigo-100 text-indigo-800 border-indigo-200";
+                    const roomName = r.room?.name || 'Room';
+                    const guestName = r.guest ? `${r.guest.firstName} ${r.guest.lastName}`.trim() : r.code;
 
                     return (
-                      <div key={r.id} className={`text-xs px-2 py-1 rounded border ${color} truncate cursor-pointer hover:opacity-80 transition-opacity`} title={`${t.reservations.room} ${r.roomId}: ${r.platform}`}>
-                        {t.reservations.room} {r.roomId}: {r.platform}
+                      <div key={r.id} className={`text-xs px-2 py-1 rounded border ${color} truncate cursor-pointer hover:opacity-80 transition-opacity`} title={`${roomName}: ${guestName}`}>
+                        {roomName}: {guestName}
                       </div>
                     );
                   })}
                   {dayBlocks.map((b: any) => (
-                    <div key={b.id} className="text-xs px-2 py-1 rounded border bg-slate-100 text-slate-800 border-slate-200 truncate" title={`${t.reservations.room} ${b.roomId}: ${t.calendar.blocked}`}>
-                      {t.reservations.room} {b.roomId}: {t.calendar.blocked}
+                    <div key={b.id} className="text-xs px-2 py-1 rounded border bg-slate-100 text-slate-800 border-slate-200 truncate" title={`${b.room?.name || 'Room'}: ${t.calendar.blocked}`}>
+                      {b.room?.name || 'Room'}: {t.calendar.blocked}
                     </div>
                   ))}
                 </div>

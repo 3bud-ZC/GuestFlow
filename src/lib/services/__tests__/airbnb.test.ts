@@ -60,13 +60,20 @@ describe('Airbnb Service', () => {
     it('should handle failed fetches gracefully', async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
-        statusText: 'Not Found'
+        status: 404,
+        statusText: 'Not Found',
+        headers: {
+          get: (key: string) => null,
+          has: (key: string) => false,
+        },
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
       });
 
-      const result = await airbnbService.probe('https://www.airbnb.com/calendar/ical/invalid.ics');
+      const result = await airbnbService.probe('https://www.airbnb.com/calendar/ical/99999999.ics');
 
       expect(result.healthy).toBe(false);
-      expect(result.error).toBe('Failed to connect or parse calendar');
+      expect(result.error).toContain('not found');
+      expect((result as any).errorCode).toBe('AIRBNB_HTTP_ERROR');
     });
   });
 });

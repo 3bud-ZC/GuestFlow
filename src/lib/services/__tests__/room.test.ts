@@ -50,7 +50,7 @@ describe('roomService', () => {
 
     it('should reject if probe fails', async () => {
       vi.mocked(airbnbService.validateUrl).mockReturnValue(true);
-      vi.mocked(airbnbService.probe).mockResolvedValue({ healthy: false, error: 'Network error' });
+      vi.mocked(airbnbService.probe).mockResolvedValue({ healthy: false, errorCode: 'AIRBNB_FETCH_TIMEOUT', error: 'Network error', errorAr: 'خطأ في الشبكة' });
       
       await expect(roomService.connectAirbnbConnection(roomId, validUrl))
         .rejects.toThrow('Network error');

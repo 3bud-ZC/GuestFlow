@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 export function RoomRow({ room, isAdmin, propertyId }: { room: any, isAdmin: boolean, propertyId: string }) {
   const [syncing, setSyncing] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [syncResult, setSyncResult] = useState("");
   
   const [isConnecting, setIsConnecting] = useState(false);
   const [airbnbUrl, setAirbnbUrl] = useState("");
@@ -17,28 +18,30 @@ export function RoomRow({ room, isAdmin, propertyId }: { room: any, isAdmin: boo
 
   async function handleSync() {
     setSyncing(true);
+    setError("");
     try {
       const res = await syncAirbnbAction(room.id, propertyId);
       if (res && res.success && res.summary) {
         const s = res.summary;
-        alert(`Sync complete!\nNew Reservations: ${s.importedReservations}\nUpdated: ${s.updated}\nCancelled: ${s.cancelledReservations}\nBlocks: ${s.importedBlocks}\nRemoved Blocks: ${s.removedBlocks}\nConflicts: ${s.conflicts}\nUnchanged: ${s.unchanged}`);
+        setSyncResult(`Sync complete! New: ${s.importedReservations}, Updated: ${s.updated}, Cancelled: ${s.cancelledReservations}, Blocks: ${s.importedBlocks}, Conflicts: ${s.conflicts}`);
       } else if (res && !res.success) {
-        alert(res.error || "Sync failed");
+        setError(res.error || "Sync failed");
       }
     } catch (e: any) {
-      alert(e.message || "Sync failed");
+      setError(e.message || "Sync failed");
     } finally {
       setSyncing(false);
     }
   }
 
   async function handleDisconnect() {
-    if (!confirm("Are you sure you want to disconnect this Airbnb calendar? Syncing will stop.")) return;
+    if (!confirm("Are you sure you want to disconnect this Airbnb calendar? Syncing will stop but existing reservations will be preserved.")) return;
     setDisconnecting(true);
+    setError("");
     try {
       await disconnectAirbnbAction(room.id, propertyId);
     } catch (e: any) {
-      alert(e.message || "Disconnect failed");
+      setError(e.message || "Disconnect failed");
     } finally {
       setDisconnecting(false);
     }
@@ -105,10 +108,16 @@ export function RoomRow({ room, isAdmin, propertyId }: { room: any, isAdmin: boo
                 {!isHealthy && (
                   <span className="text-red-600 ml-1 block w-full mt-1">Error: {room.airbnbLastSyncError}</span>
                 )}
+                {syncResult && (
+                  <span className="text-green-600 ml-1 block w-full mt-1">{syncResult}</span>
+                )}
               </div>
             )}
             {!isConnected && (
               <div className="text-xs text-slate-500 mt-1">Not connected to Airbnb</div>
+            )}
+            {error && !isConnecting && (
+              <div className="text-xs text-red-600 mt-1">{error}</div>
             )}
           </div>
         </div>
