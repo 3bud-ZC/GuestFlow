@@ -20,8 +20,6 @@ export function RoomForm({ propertyId, onSuccess }: { propertyId: string, onSucc
       if (mode === "airbnb" && preview) {
         formData.set("name", roomName);
         formData.set("airbnbIcalUrl", airbnbUrl);
-        if (preview.listingId) formData.set("airbnbListingId", preview.listingId);
-        if (preview.calendarName) formData.set("airbnbCalendarName", preview.calendarName);
       }
       
       await createRoomAction(formData);

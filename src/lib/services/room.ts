@@ -28,6 +28,14 @@ export const roomService = {
         throw new Error("Invalid Airbnb calendar URL.");
       }
 
+      const probeResult = await airbnbService.probe(validData.airbnbIcalUrl);
+      if (!probeResult.healthy) {
+        throw new Error(probeResult.error || "Failed to connect to Airbnb calendar.");
+      }
+
+      validData.airbnbListingId = probeResult.listingId || undefined;
+      validData.airbnbCalendarName = probeResult.calendarName || undefined;
+
       const existing = await db.room.findFirst({
         where: { airbnbIcalUrl: validData.airbnbIcalUrl }
       });
@@ -45,7 +53,21 @@ export const roomService = {
       }
     }
     
-    return db.room.create({ data: validData });
+    const room = await db.room.create({ data: validData });
+
+    if (validData.airbnbIcalUrl) {
+      const { syncService } = await import('./sync');
+      try {
+        await syncService.syncRoom(room.id);
+      } catch (e: any) {
+        await db.room.update({
+          where: { id: room.id },
+          data: { airbnbLastSyncError: e.message || "Initial sync failed" }
+        });
+      }
+    }
+    
+    return room;
   },
 
   async updateRoom(id: string, data: RoomInput) {
@@ -88,11 +110,19 @@ export const roomService = {
     });
   },
 
-  async connectAirbnbConnection(roomId: string, airbnbIcalUrl: string, airbnbListingId?: string, airbnbCalendarName?: string) {
+  async connectAirbnbConnection(roomId: string, airbnbIcalUrl: string) {
     const { airbnbService } = await import('./airbnb');
     if (!airbnbService.validateUrl(airbnbIcalUrl)) {
       throw new Error("Invalid Airbnb calendar URL.");
     }
+
+    const probeResult = await airbnbService.probe(airbnbIcalUrl);
+    if (!probeResult.healthy) {
+      throw new Error(probeResult.error || "Failed to connect to Airbnb calendar.");
+    }
+
+    const airbnbListingId = probeResult.listingId || null;
+    const airbnbCalendarName = probeResult.calendarName || null;
 
     const existingUrl = await db.room.findFirst({
       where: { airbnbIcalUrl }
@@ -114,13 +144,22 @@ export const roomService = {
       where: { id: roomId },
       data: {
         airbnbIcalUrl,
-        airbnbListingId: airbnbListingId || null,
-        airbnbCalendarName: airbnbCalendarName || null,
+        airbnbListingId,
+        airbnbCalendarName,
         airbnbSyncEnabled: true,
+        airbnbLastSyncError: null,
       }
     });
 
     const { syncService } = await import('./sync');
-    return await syncService.syncRoom(roomId);
+    try {
+      return await syncService.syncRoom(roomId);
+    } catch (e: any) {
+      await db.room.update({
+        where: { id: roomId },
+        data: { airbnbLastSyncError: e.message || "Initial sync failed" }
+      });
+      return { success: false, error: e.message || "Initial sync failed" };
+    }
   }
 };

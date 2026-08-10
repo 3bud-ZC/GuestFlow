@@ -38,6 +38,14 @@ describe('Airbnb Service', () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         text: () => Promise.resolve('BEGIN:VCALENDAR...'),
+        arrayBuffer: () => Promise.resolve(new TextEncoder().encode('BEGIN:VCALENDAR...').buffer),
+        headers: {
+          get: (key: string) => {
+            if (key === 'content-length') return '1024';
+            return null;
+          },
+          has: (key: string) => false,
+        }
       });
 
       const result = await airbnbService.probe('https://www.airbnb.com/calendar/ical/987654.ics');

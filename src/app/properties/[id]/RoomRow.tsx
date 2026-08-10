@@ -66,8 +66,6 @@ export function RoomRow({ room, isAdmin, propertyId }: { room: any, isAdmin: boo
     setError("");
     try {
       formData.set("airbnbIcalUrl", airbnbUrl);
-      if (preview.listingId) formData.set("airbnbListingId", preview.listingId);
-      if (preview.calendarName) formData.set("airbnbCalendarName", preview.calendarName);
       
       await connectAirbnbAction(room.id, propertyId, formData);
       setIsConnecting(false);
