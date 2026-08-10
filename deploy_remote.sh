@@ -28,7 +28,7 @@ else
 fi
 
 # 4. Install dependencies deterministically
-npm ci
+npm install
 
 # 5. Database generation & migration
 npx prisma generate
