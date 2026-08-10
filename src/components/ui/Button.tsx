@@ -39,7 +39,7 @@ export function Button({ variant = "primary", size = "md", href, icon, children,
   }
 
   return (
-    <button className={classes} {...props}>
+    <button className={classes} onClick={onClick} {...props}>
       {icon}
       {children}
     </button>
