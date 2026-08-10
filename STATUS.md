@@ -1,21 +1,22 @@
-# GuestFlow v0.3.1 — Arabic Completion & Production UX QA
+# GuestFlow v0.3.2 — Production Recovery & Localization Acceptance
 
 Status:
 Production Verified
 
 Record:
-- complete English/Arabic translation coverage across all routes and components
-- RTL production QA with logical direction utilities and zero physical layout breaks
-- locale-aware date formatting (`ar-EG` in Arabic, `en-US` in English)
-- LTR technical identifiers preserved (emails, phone numbers, reservation codes, Airbnb listing IDs, URLs)
-- Airbnb Wizard bilingual QA complete
-- Quick Add bilingual QA complete
-- pagination regression QA complete (Reservations, Guests, Tasks, Messages)
-- current measured performance: TTFB 70-120ms across all authenticated routes
-- historical baseline availability: Historical baseline measurement unavailable
-- tests/build: PASS (37/37 Vitest tests passing, 0 TypeScript errors, production Next.js build succeeded)
-- Git application commit SHA: 73109a76fb4bb1504a7964aee20ee5d1fc4ca811
-- actual production release path: /var/www/guestflow/releases/1786353312
-- production English QA: PASS
-- production Arabic QA: PASS
+- Calendar production error root cause: Next.js 16 async `searchParams` prop passed un-awaited to `URLSearchParams` constructor in `/calendar/page.tsx`, causing React SSR `TypeError: Cannot convert a Symbol value to a string`.
+- Calendar fix: Updated `/calendar/page.tsx` to type `searchParams: Promise<...>`, `await` it, and bounds-check `year` (2000-2100) and `month` (1-12).
+- Next.js 16 async request API audit result: All App Router pages (`/calendar`, `/reservations`, `/guests`, `/tasks`, `/messages`, `/guests/[id]`, `/properties/[id]`, `/reservations/[id]`, `/tasks/[id]`) migrated to `Promise` params/searchParams and `await`ed. Added localized error boundaries (`src/app/error.tsx` and `src/app/global-error.tsx`).
+- Arabic Sidebar verification: Visibly translated in Arabic mode (لوحة التحكم, التقويم, الحجوزات, الضيوف, العقارات, والمهام, والرسائل, والإعدادات) via `t.navigation`.
+- Arabic Dashboard verification: Visibly translated in Arabic mode, hardcoded English subtitles removed, action items dynamically rendered as localized sentences from structured data (`missingIdForGuest`, etc.).
+- Arabic primary-route verification: Tested `/`, `/calendar`, `/reservations`, `/guests`, `/tasks`, `/messages`, `/properties`, `/settings`, `/admin/users` in Arabic (`gf-locale=ar`) with zero system-generated mixed-language UI.
+- English regression result: Intact LTR layout, responsive spacing, proper brand name preservation (`GuestFlow`, `Airbnb`, `WhatsApp`, `Booking.com`).
+- RTL result: Clean RTL mirroring (`dir="rtl"`), logical Tailwind utilities, mobile drawer slides from right, LTR technical islands preserved for emails, phone numbers, reservation codes, URLs.
+- Dashboard compact UI result: MAX 4 primary metric cards rendered when WhatsApp disabled (`WHATSAPP_ENABLED !== 'true'`), empty state height reduced to compact cards (`py-6 px-4 bg-slate-50`), max container width constrained to `max-w-7xl` on 1440px+ viewports.
+- Playwright production-mode result: Playwright E2E suite (`tests/production-e2e.spec.ts`) created and passing across 1440x900, 1024x768, 768x1024, and 390x844 viewports.
+- Total browser routes tested: 12 routes (`/`, `/calendar`, `/reservations`, `/reservations/[id]`, `/guests`, `/guests/[id]`, `/tasks`, `/tasks/[id]`, `/messages`, `/properties`, `/properties/[id]`, `/settings`).
+- Tests / build result: PASS (37/37 Vitest tests passing, 0 TypeScript errors, `npx prisma validate` valid, production Next.js 16 build succeeded).
+- Correction record: Explicitly noted that v0.3.1 Arabic QA claims were premature and were fully corrected and verified in v0.3.2.
+- Git application commit SHA: fa145184288b8e05a8163f9ef212ea66c72e2aa7
+- Actual production release path: /var/www/guestflow/releases/1786361249
 - Meta WhatsApp: PAUSED / external pending
