@@ -1,0 +1,260 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  RECEPTION
+}
+
+enum ReservationPlatform {
+  AIRBNB
+  BOOKING
+  DIRECT
+}
+
+enum ReservationStatus {
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+}
+
+enum GuestDocumentStatus {
+  PENDING
+  RECEIVED
+  NOT_REQUIRED
+}
+
+enum MessageType {
+  WELCOME
+  ID_REMINDER
+  LOCATION
+  CHECKIN_WELCOME
+  CHECKOUT_REMINDER
+  REVIEW_REQUEST
+}
+
+enum MessageStatus {
+  SCHEDULED
+  SENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum AutomationEvent {
+  RESERVATION_CREATED
+  RESERVATION_UPDATED
+  GUEST_ID_RECEIVED
+  RESERVATION_CHECKIN_DUE
+  RESERVATION_CHECKED_IN
+  RESERVATION_CHECKOUT_DUE
+  RESERVATION_CHECKED_OUT
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(RECEPTION)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tasks     Task[]
+}
+
+model Property {
+  id               String            @id @default(uuid())
+  name             String
+  address          String?
+  googleMapsUrl    String?
+  wifiName         String?
+  wifiPassword     String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  rooms            Room[]
+  propertySettings PropertySettings?
+  reservations     Reservation[]
+}
+
+model Room {
+  id           String        @id @default(uuid())
+  name         String
+  propertyId   String
+  property     Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  reservations Reservation[]
+
+  @@index([propertyId])
+}
+
+model Guest {
+  id                String              @id @default(uuid())
+  firstName         String
+  lastName          String
+  phone             String?
+  email             String?
+  nationality       String?
+  preferredLanguage String?
+  documentStatus    GuestDocumentStatus @default(PENDING)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  reservations      Reservation[]
+  messages          Message[]
+  tasks             Task[]
+
+  @@index([email])
+}
+
+model Reservation {
+  id             String              @id @default(uuid())
+  code           String              @unique
+  platform       ReservationPlatform
+  guestId        String
+  guest          Guest               @relation(fields: [guestId], references: [id], onDelete: Restrict)
+  propertyId     String
+  property       Property            @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  roomId         String
+  room           Room                @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  checkInDate    DateTime
+  checkOutDate   DateTime
+  numberOfGuests Int
+  status         ReservationStatus   @default(CONFIRMED)
+  actualCheckInAt  DateTime?
+  actualCheckOutAt DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  messages       Message[]
+  tasks          Task[]
+  activityLogs   ActivityLog[]
+
+  @@index([propertyId])
+  @@index([checkInDate])
+  @@index([status])
+}
+
+model MessageTemplate {
+  id               String      @id @default(uuid())
+  type             MessageType
+  metaTemplateName String
+  languageCode     String      @default("en")
+  enabled          Boolean     @default(true)
+  description      String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  messages         Message[]
+}
+
+model Message {
+  id                String           @id @default(uuid())
+  providerMessageId String?
+  type              MessageType
+  status            MessageStatus    @default(SCHEDULED)
+  scheduledAt       DateTime?
+  sentTime          DateTime?
+  failedTime        DateTime?
+  errorInfo         String?
+  reservationId     String
+  reservation       Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  guestId           String
+  guest             Guest            @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  templateId        String?
+  template          MessageTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([reservationId])
+  @@index([guestId])
+}
+
+model Task {
+  id             String       @id @default(uuid())
+  title          String
+  description    String?
+  priority       TaskPriority @default(MEDIUM)
+  status         TaskStatus   @default(OPEN)
+  dueDate        DateTime?
+  completedAt    DateTime?
+  reservationId  String?
+  reservation    Reservation? @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  guestId        String?
+  guest          Guest?       @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  assignedUserId String?
+  assignedUser   User?        @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([status])
+  @@index([reservationId])
+}
+
+model AutomationRule {
+  id        String          @id @default(uuid())
+  event     AutomationEvent
+  action    String
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model PropertySettings {
+  id           String   @id @default(uuid())
+  propertyId   String   @unique
+  property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  checkInTime  String
+  checkOutTime String
+  timezone     String
+  
+  // Social Media
+  instagramUrl String?
+  facebookUrl  String?
+  tiktokUrl    String?
+
+  // Automation
+  welcomeEnabled          Boolean @default(true)
+  idReminderEnabled       Boolean @default(true)
+  locationEnabled         Boolean @default(true)
+  checkoutReminderEnabled Boolean @default(true)
+  reviewRequestEnabled    Boolean @default(true)
+
+  idReminderOffsetHours   Int     @default(24)
+  locationOffsetHours     Int     @default(24)
+  checkoutOffsetHours     Int     @default(24)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ActivityLog {
+  id            String       @id @default(uuid())
+  actorId       String?
+  reservationId String
+  reservation   Reservation  @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  action        String
+  metadata      Json?
+  timestamp     DateTime     @default(now())
+
+  @@index([reservationId])
+}
