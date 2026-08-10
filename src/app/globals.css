@@ -33,3 +33,8 @@ body {
 [dir="ltr"] {
   text-align: left;
 }
+
+/* Ensure all form inputs and selects have clearly visible text */
+input, select, textarea, option {
+  color: #000000 !important;
+}
