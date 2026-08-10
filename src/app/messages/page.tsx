@@ -13,11 +13,12 @@ import { Locale } from "@/lib/i18n/types";
 export default async function MessagesPage({
   searchParams,
 }: {
-  searchParams: { status?: string; type?: string; q?: string; page?: string };
+  searchParams: Promise<{ status?: string; type?: string; q?: string; page?: string }>;
 }) {
-  const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
+  const resolvedSearchParams = await searchParams;
+  const page = resolvedSearchParams.page ? parseInt(resolvedSearchParams.page, 10) : 1;
   const data = await messageService.getAllMessages({
-    ...searchParams,
+    ...resolvedSearchParams,
     page
   });
   
@@ -55,7 +56,7 @@ export default async function MessagesPage({
               <input
                 type="text"
                 name="q"
-                defaultValue={searchParams.q || ""}
+                defaultValue={resolvedSearchParams.q || ""}
                 placeholder="Search guest or code..."
                 className="block w-full ltr:pl-10 rtl:pr-10 ltr:pr-3 rtl:pl-3 py-2 border border-slate-300 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow bg-white"
               />
@@ -64,7 +65,7 @@ export default async function MessagesPage({
             <div className="flex flex-wrap sm:flex-nowrap gap-3 shrink-0">
               <select
                 name="type"
-                defaultValue={searchParams.type || "ALL"}
+                defaultValue={resolvedSearchParams.type || "ALL"}
                 className="block w-full sm:w-auto py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
               >
                 <option value="ALL">{t.common.allTypes || 'All Types'}</option>
@@ -73,7 +74,7 @@ export default async function MessagesPage({
               
               <select
                 name="status"
-                defaultValue={searchParams.status || "ALL"}
+                defaultValue={resolvedSearchParams.status || "ALL"}
                 className="block w-full sm:w-auto py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
               >
                 <option value="ALL">{t.common.allStatuses || 'All Statuses'}</option>

@@ -34,7 +34,7 @@ export default async function DashboardPage() {
   const today = new Date().toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-slate-500 mb-1">
@@ -42,7 +42,7 @@ export default async function DashboardPage() {
             <span className="text-sm font-medium">{today}</span>
           </div>
           <p className="mt-1 text-slate-500">
-            Here's what needs attention today.
+            {t.dashboard.welcomeBack}
           </p>
         </div>
         <Button href="/reservations/create" variant="primary">
@@ -51,62 +51,47 @@ export default async function DashboardPage() {
       </div>
 
       {/* KPI Row */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className={`grid grid-cols-2 md:grid-cols-3 ${(data as any).whatsappEnabled ? 'lg:grid-cols-6' : 'lg:grid-cols-4'} gap-4`}>
         <MetricCard 
           title={t.dashboard.checkinsToday} 
           value={data.metrics.checkinsToday} 
           icon={<ArrowRight className={`w-5 h-5 text-blue-600 ${isRtl ? 'rotate-180' : ''}`} />}
-          trend="Arrivals"
+          trend={t.dashboard.arrivals}
         />
         <MetricCard 
           title={t.dashboard.checkoutsToday} 
           value={data.metrics.checkoutsToday} 
           icon={<ArrowLeft className={`w-5 h-5 text-emerald-600 ${isRtl ? 'rotate-180' : ''}`} />}
-          trend="Departures"
+          trend={t.dashboard.departures}
         />
         <MetricCard 
           title={t.dashboard.missingIds} 
           value={data.metrics.missingIds} 
           icon={<FileWarning className="w-5 h-5 text-amber-600" />}
-          trend="Pending collection"
+          trend={t.dashboard.pendingCollection}
           urgent={data.metrics.missingIds > 0}
         />
         <MetricCard 
           title={t.dashboard.openTasks} 
           value={data.metrics.openTasks} 
           icon={<CheckSquare className="w-5 h-5 text-slate-600" />}
-          trend="Requires action"
+          trend={t.dashboard.requiresAction}
           urgent={data.metrics.openTasks > 0}
         />
-        {(data as any).whatsappEnabled ? (
+        {(data as any).whatsappEnabled && (
           <>
             <MetricCard 
-              title="Failed Messages" 
+              title={t.dashboard.failedMessages} 
               value={data.metrics.failedMessages} 
               icon={<MessageSquareWarning className="w-5 h-5 text-red-600" />}
-              trend="Delivery errors"
+              trend={t.dashboard.deliveryErrors}
               urgent={data.metrics.failedMessages > 0}
             />
             <MetricCard 
               title={t.dashboard.scheduledMessages} 
               value={data.metrics.scheduledMessages} 
               icon={<Clock className="w-5 h-5 text-indigo-600" />}
-              trend="Automated queue"
-            />
-          </>
-        ) : (
-          <>
-            <MetricCard 
-              title={t.dashboard.failedMessages} 
-              value="-" 
-              icon={<MessageSquareWarning className="w-5 h-5 text-slate-400" />}
-              trend="WhatsApp disabled"
-            />
-            <MetricCard 
-              title={t.dashboard.scheduledMessages} 
-              value="-" 
-              icon={<Clock className="w-5 h-5 text-slate-400" />}
-              trend="WhatsApp disabled"
+              trend={t.dashboard.automatedQueue}
             />
           </>
         )}
@@ -128,32 +113,57 @@ export default async function DashboardPage() {
             
             <div className="divide-y divide-slate-100 flex-1">
               {data.actionRequired.length === 0 ? (
-                <div className="h-full min-h-[200px] flex items-center justify-center p-6">
-                  <EmptyState 
-                    icon={CheckSquare}
-                    title={t.dashboard.allCaughtUp}
-                    description=""
-                  />
+                <div className="p-6">
+                  <div className="py-6 px-4 bg-slate-50 rounded-xl text-center flex flex-col items-center">
+                    <CheckSquare className="w-8 h-8 text-slate-400 mb-2" />
+                    <h3 className="text-sm font-medium text-slate-900">{t.dashboard.allCaughtUp}</h3>
+                  </div>
                 </div>
               ) : (
                 <>
-                  {data.actionRequired.slice(0, 8).map((action: any, idx: number) => (
-                    <Link key={idx} href={action.link} className="block p-4 hover:bg-slate-50 transition-colors group">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`w-2 h-2 rounded-full shrink-0 ${
-                              action.urgency === 'URGENT' || action.urgency === 'HIGH' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-amber-500'
-                            }`} />
-                            <span className="text-sm font-medium text-slate-900 line-clamp-2 leading-snug">
-                              {action.message}
-                            </span>
+                  {data.actionRequired.slice(0, 8).map((action: any, idx: number) => {
+                    let messageText = '';
+                    switch (action.type) {
+                      case 'MISSING_ID':
+                        messageText = (t.dashboard as any).missingIdForGuest?.replace('{guest}', action.guestName || '') || `${action.guestName} checking in today is missing ID`;
+                        break;
+                      case 'MISSING_GUEST':
+                        messageText = (t.dashboard as any).missingGuestDetails?.replace('{code}', action.reservationCode || '') || `Airbnb check-in today (${action.reservationCode}) requires guest details`;
+                        break;
+                      case 'OPEN_TASK':
+                        messageText = (t.dashboard as any).openTaskPriority?.replace('{priority}', t.tasks[action.urgency as keyof typeof t.tasks] || action.urgency).replace('{title}', action.taskTitle || '') || `[${action.urgency}] ${action.taskTitle}`;
+                        break;
+                      case 'FAILED_MESSAGE':
+                        messageText = (t.dashboard as any).failedMessageForGuest?.replace('{guest}', action.guestName || '') || `WhatsApp delivery failed for ${action.guestName}`;
+                        break;
+                      case 'CHECKIN_TODAY':
+                        messageText = (t.dashboard as any).checkinPendingFor?.replace('{guest}', action.guestName || '') || `${action.guestName} check-in pending`;
+                        break;
+                      case 'CHECKOUT_TODAY':
+                        messageText = (t.dashboard as any).checkoutPendingFor?.replace('{guest}', action.guestName || '') || `${action.guestName} check-out pending`;
+                        break;
+                      default:
+                        messageText = 'Action required';
+                    }
+
+                    return (
+                      <Link key={idx} href={action.link} className="block p-4 hover:bg-slate-50 transition-colors group">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`w-2 h-2 rounded-full shrink-0 ${
+                                action.urgency === 'URGENT' || action.urgency === 'HIGH' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-amber-500'
+                              }`} />
+                              <span className="text-sm font-medium text-slate-900 line-clamp-2 leading-snug">
+                                {messageText}
+                              </span>
+                            </div>
                           </div>
+                          <ChevronRight className={`w-4 h-4 text-slate-300 group-hover:text-blue-500 shrink-0 mt-0.5 transition-colors ${isRtl ? 'rotate-180' : ''}`} />
                         </div>
-                        <ChevronRight className={`w-4 h-4 text-slate-300 group-hover:text-blue-500 shrink-0 mt-0.5 transition-colors ${isRtl ? 'rotate-180' : ''}`} />
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    );
+                  })}
                   {data.actionRequired.length > 8 && (
                     <Link href="/tasks" className="block p-4 text-center text-sm font-medium text-blue-600 hover:bg-slate-50 transition-colors">
                       {t.common.viewAll} ({data.actionRequired.length})
@@ -173,11 +183,10 @@ export default async function DashboardPage() {
             } />
             {data.todaysCheckins.length === 0 ? (
               <div className="p-6">
-                <EmptyState 
-                  icon={PlaneLanding}
-                  title={t.dashboard.noArrivals}
-                  description=""
-                />
+                <div className="py-6 px-4 bg-slate-50 rounded-xl text-center flex flex-col items-center">
+                  <PlaneLanding className="w-8 h-8 text-slate-400 mb-2" />
+                  <h3 className="text-sm font-medium text-slate-900">{t.dashboard.noArrivals}</h3>
+                </div>
               </div>
             ) : (
               <Table>
@@ -239,11 +248,10 @@ export default async function DashboardPage() {
             } />
             {data.todaysCheckouts.length === 0 ? (
               <div className="p-6">
-                <EmptyState 
-                  icon={PlaneTakeoff}
-                  title={t.dashboard.noDepartures}
-                  description=""
-                />
+                <div className="py-6 px-4 bg-slate-50 rounded-xl text-center flex flex-col items-center">
+                  <PlaneTakeoff className="w-8 h-8 text-slate-400 mb-2" />
+                  <h3 className="text-sm font-medium text-slate-900">{t.dashboard.noDepartures}</h3>
+                </div>
               </div>
             ) : (
               <Table>

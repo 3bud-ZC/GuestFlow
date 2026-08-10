@@ -15,10 +15,11 @@ import { Locale } from "@/lib/i18n/types";
 export default async function GuestsPage({
   searchParams,
 }: {
-  searchParams: { q?: string; page?: string };
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const query = searchParams.q || "";
-  const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
+  const resolvedSearchParams = await searchParams;
+  const query = resolvedSearchParams.q || "";
+  const page = resolvedSearchParams.page ? parseInt(resolvedSearchParams.page, 10) : 1;
   const data = await guestService.getGuests({ query, page });
   const guests = data.items || [];
   const totalPages = data.totalPages || 1;

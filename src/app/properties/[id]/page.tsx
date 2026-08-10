@@ -8,8 +8,9 @@ import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeft, Building2, MapPin, DoorClosed } from "lucide-react";
 
-export default async function PropertyDetailsPage({ params }: { params: { id: string } }) {
-  const property = await propertyService.getPropertyById(params.id);
+export default async function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const property = await propertyService.getPropertyById(id);
   if (!property) notFound();
 
   const user = await getCurrentUser();

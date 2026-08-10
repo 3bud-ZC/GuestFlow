@@ -10,8 +10,9 @@ import { cookies } from "next/headers";
 import { getDictionary } from "@/lib/i18n";
 import { Locale } from "@/lib/i18n/types";
 
-export default async function GuestDetailsPage({ params }: { params: { id: string } }) {
-  const guest = await guestService.getGuestById(params.id);
+export default async function GuestDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const guest = await guestService.getGuestById(id);
   if (!guest) notFound();
   
   const cookieStore = await cookies();

@@ -84,15 +84,17 @@ export const dashboardService = {
     ]);
 
     // Build Action Required List
-    const actionRequired: { type: string; message: string; link: string; urgency: string }[] = [];
+    const actionRequired: { id: string; type: string; titleKey: string; reservationCode?: string; guestName?: string; taskTitle?: string; link: string; urgency: string }[] = [];
 
     missingIdReservations.forEach((res: any) => {
       if (res.guest && res.guest.documentStatus === 'PENDING') {
         const hasTask = urgentTasks.some((t: any) => t.reservationId === res.id);
         if (!hasTask) {
           actionRequired.push({
+            id: res.id,
             type: 'MISSING_ID',
-            message: `${res.guest.firstName} ${res.guest.lastName} checking in today is missing ID`,
+            titleKey: 'missingIdForGuest',
+            guestName: `${res.guest.firstName} ${res.guest.lastName}`,
             link: `/guests/${res.guest.id}`,
             urgency: 'HIGH'
           });
@@ -101,8 +103,10 @@ export const dashboardService = {
         const hasTask = urgentTasks.some((t: any) => t.reservationId === res.id);
         if (!hasTask) {
           actionRequired.push({
+            id: res.id,
             type: 'MISSING_GUEST',
-            message: `Airbnb check-in today (${res.code}) requires guest details`,
+            titleKey: 'missingGuestDetails',
+            reservationCode: res.code,
             link: `/reservations/${res.id}`,
             urgency: 'HIGH'
           });
@@ -112,8 +116,10 @@ export const dashboardService = {
 
     urgentTasks.forEach((task: any) => {
       actionRequired.push({
-        type: 'TASK',
-        message: `[${task.priority}] ${task.title}`,
+        id: task.id,
+        type: 'OPEN_TASK',
+        titleKey: 'openTaskPriority',
+        taskTitle: task.title,
         link: `/tasks/${task.id}`,
         urgency: task.priority
       });
@@ -121,28 +127,32 @@ export const dashboardService = {
 
     failedMessages.forEach((msg: any) => {
       actionRequired.push({
+        id: msg.id,
         type: 'FAILED_MESSAGE',
-        message: `WhatsApp delivery failed for ${msg.guest?.firstName || 'Guest'} (${msg.type})`,
+        titleKey: 'failedMessageForGuest',
+        guestName: msg.guest?.firstName || 'Guest',
         link: `/reservations/${msg.reservationId}`,
         urgency: 'HIGH'
       });
     });
 
     pendingCheckins.forEach((res: any) => {
-      const name = res.guest ? res.guest.firstName : 'Unknown Guest';
       actionRequired.push({
-        type: 'CHECK_IN_PENDING',
-        message: `${name} check-in pending for ${res.room.name}`,
+        id: res.id,
+        type: 'CHECKIN_TODAY',
+        titleKey: 'checkinPendingFor',
+        guestName: res.guest ? res.guest.firstName : 'Unknown Guest',
         link: `/reservations/${res.id}`,
         urgency: 'MEDIUM'
       });
     });
 
     pendingCheckouts.forEach((res: any) => {
-      const name = res.guest ? res.guest.firstName : 'Unknown Guest';
       actionRequired.push({
-        type: 'CHECK_OUT_PENDING',
-        message: `${name} check-out pending for ${res.room.name}`,
+        id: res.id,
+        type: 'CHECKOUT_TODAY',
+        titleKey: 'checkoutPendingFor',
+        guestName: res.guest ? res.guest.firstName : 'Unknown Guest',
         link: `/reservations/${res.id}`,
         urgency: 'MEDIUM'
       });

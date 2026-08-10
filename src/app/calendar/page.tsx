@@ -12,14 +12,21 @@ import { Locale } from "@/lib/i18n/types";
 export default async function CalendarPage({
   searchParams
 }: {
-  searchParams: { month?: string, year?: string, propertyId?: string, roomId?: string }
+  searchParams: Promise<{ month?: string, year?: string, propertyId?: string, roomId?: string }>
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
+  const resolvedSearchParams = await searchParams;
+  const { propertyId, roomId, month: monthStr, year: yearStr } = resolvedSearchParams;
+
   const currentDate = new Date();
-  const year = searchParams.year ? parseInt(searchParams.year, 10) : currentDate.getFullYear();
-  const month = searchParams.month ? parseInt(searchParams.month, 10) - 1 : currentDate.getMonth(); // 0-indexed
+  
+  let year = yearStr ? parseInt(yearStr, 10) : currentDate.getFullYear();
+  if (isNaN(year) || year < 2000 || year > 2100) year = currentDate.getFullYear();
+  
+  let month = monthStr ? parseInt(monthStr, 10) - 1 : currentDate.getMonth(); // 0-indexed
+  if (isNaN(month) || month < 0 || month > 11) month = currentDate.getMonth();
   
   const displayDate = new Date(year, month, 1);
   const startMonth = startOfMonth(displayDate);
@@ -28,8 +35,6 @@ export default async function CalendarPage({
   const calendarEnd = endOfWeek(endMonth);
   
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
-  
-  const { propertyId, roomId } = searchParams;
   
   const properties = await propertyService.getProperties();
   const rooms = propertyId ? properties.find(p => p.id === propertyId)?.rooms || [] : [];
@@ -45,7 +50,9 @@ export default async function CalendarPage({
   const nextMonth = addMonths(displayDate, 1);
   
   const createNavUrl = (date: Date) => {
-    const params = new URLSearchParams(searchParams as any);
+    const params = new URLSearchParams();
+    if (resolvedSearchParams.propertyId) params.set("propertyId", resolvedSearchParams.propertyId);
+    if (resolvedSearchParams.roomId) params.set("roomId", resolvedSearchParams.roomId);
     params.set("month", (date.getMonth() + 1).toString());
     params.set("year", date.getFullYear().toString());
     return `?${params.toString()}`;

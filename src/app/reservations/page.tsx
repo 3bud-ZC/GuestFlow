@@ -15,17 +15,18 @@ import { Locale } from "@/lib/i18n/types";
 export default async function ReservationsPage({
   searchParams,
 }: {
-  searchParams: {
+  searchParams: Promise<{
     q?: string;
     platform?: string;
     status?: string;
     idStatus?: string;
     dateFilter?: string;
     page?: string;
-  };
+  }>;
 }) {
-  const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
-  const data = await reservationService.getReservations({ ...searchParams, page });
+  const resolvedSearchParams = await searchParams;
+  const page = resolvedSearchParams.page ? parseInt(resolvedSearchParams.page, 10) : 1;
+  const data = await reservationService.getReservations({ ...resolvedSearchParams, page });
   const reservations = data.items || [];
   const totalPages = data.totalPages || 1;
   const cookieStore = await cookies();
@@ -57,7 +58,7 @@ export default async function ReservationsPage({
               <input
                 type="text"
                 name="q"
-                defaultValue={searchParams.q || ""}
+                defaultValue={resolvedSearchParams.q || ""}
                 placeholder="Search code, guest name, phone..."
                 className="block w-full ltr:pl-10 rtl:pr-10 ltr:pr-3 rtl:pl-3 py-2 border border-slate-300 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow bg-white"
               />
@@ -66,7 +67,7 @@ export default async function ReservationsPage({
             <div className="flex flex-wrap sm:flex-nowrap gap-3 shrink-0">
               <select
                 name="platform"
-                defaultValue={searchParams.platform || "ALL"}
+                defaultValue={resolvedSearchParams.platform || "ALL"}
                 className="block w-full sm:w-auto py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
               >
                 <option value="ALL">All Platforms</option>
@@ -75,7 +76,7 @@ export default async function ReservationsPage({
               
               <select
                 name="status"
-                defaultValue={searchParams.status || "ALL"}
+                defaultValue={resolvedSearchParams.status || "ALL"}
                 className="block w-full sm:w-auto py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
               >
                 <option value="ALL">All Statuses</option>
@@ -84,7 +85,7 @@ export default async function ReservationsPage({
               
               <select
                 name="dateFilter"
-                defaultValue={searchParams.dateFilter || "ALL"}
+                defaultValue={resolvedSearchParams.dateFilter || "ALL"}
                 className="block w-full sm:w-auto py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
               >
                 <option value="ALL">All Dates</option>

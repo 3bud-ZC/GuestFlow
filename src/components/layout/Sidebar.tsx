@@ -17,25 +17,27 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
+
 const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays },
-  { href: "/reservations", label: "Reservations", icon: BookOpen },
-  { href: "/guests", label: "Guests", icon: Users },
-  { href: "/properties", label: "Properties", icon: Building2 },
+  { href: "/", labelKey: "dashboard", icon: LayoutDashboard },
+  { href: "/calendar", labelKey: "calendar", icon: CalendarDays },
+  { href: "/reservations", labelKey: "reservations", icon: BookOpen },
+  { href: "/guests", labelKey: "guests", icon: Users },
+  { href: "/properties", labelKey: "properties", icon: Building2 },
 ];
 
 const OPERATIONS_ITEMS = [
-  { href: "/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/messages", label: "Messages", icon: MessageSquare },
+  { href: "/tasks", labelKey: "tasks", icon: CheckSquare },
+  { href: "/messages", labelKey: "messages", icon: MessageSquare },
 ];
 
 const ADMIN_ITEMS = [
-  { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/admin/users", label: "Users", icon: ShieldCheck },
+  { href: "/settings", labelKey: "settings", icon: Settings },
+  { href: "/admin/users", labelKey: "users", icon: ShieldCheck },
 ];
 
-const NavLink = ({ href, label, icon: Icon, pathname, setIsOpen }: { href: string; label: string; icon: any, pathname: string, setIsOpen: (val: boolean) => void }) => {
+const NavLink = ({ href, labelKey, icon: Icon, pathname, setIsOpen, t }: { href: string; labelKey: string; icon: any, pathname: string, setIsOpen: (val: boolean) => void, t: any }) => {
   const isActive = pathname === href || (href !== "/" && pathname?.startsWith(href));
   return (
     <Link
@@ -52,7 +54,7 @@ const NavLink = ({ href, label, icon: Icon, pathname, setIsOpen }: { href: strin
           isActive ? "text-blue-600" : "text-slate-400"
         }`}
       />
-      <span className="truncate">{label}</span>
+      <span className="truncate">{t.navigation[labelKey as keyof typeof t.navigation] || labelKey}</span>
       {isActive && (
         <span className="ltr:ml-auto rtl:mr-auto w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />
       )}
@@ -60,7 +62,7 @@ const NavLink = ({ href, label, icon: Icon, pathname, setIsOpen }: { href: strin
   );
 };
 
-const SidebarContent = ({ user, pathname, setIsOpen }: { user: any, pathname: string, setIsOpen: (val: boolean) => void }) => (
+const SidebarContent = ({ user, pathname, setIsOpen, t }: { user: any, pathname: string, setIsOpen: (val: boolean) => void, t: any }) => (
   <aside className="flex flex-col h-full w-64 bg-white ltr:border-r rtl:border-l border-slate-200">
     {/* Header */}
     <div className="h-16 flex items-center px-5 border-b border-slate-100 shrink-0">
@@ -78,7 +80,7 @@ const SidebarContent = ({ user, pathname, setIsOpen }: { user: any, pathname: st
       <button
         onClick={() => setIsOpen(false)}
         className="ltr:ml-auto rtl:mr-auto xl:hidden p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-        aria-label="Close menu"
+        aria-label={t.navigation.closeMenu}
       >
         <X className="w-5 h-5" />
       </button>
@@ -88,17 +90,17 @@ const SidebarContent = ({ user, pathname, setIsOpen }: { user: any, pathname: st
     <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
       <div className="space-y-0.5">
         {NAV_ITEMS.map((item) => (
-          <NavLink key={item.href} {...item} pathname={pathname} setIsOpen={setIsOpen} />
+          <NavLink key={item.href} {...item} pathname={pathname} setIsOpen={setIsOpen} t={t} />
         ))}
       </div>
 
       <div>
         <p className="px-3 mb-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
-          Operations
+          {t.navigation.operations}
         </p>
         <div className="space-y-0.5">
           {OPERATIONS_ITEMS.map((item) => (
-            <NavLink key={item.href} {...item} pathname={pathname} setIsOpen={setIsOpen} />
+            <NavLink key={item.href} {...item} pathname={pathname} setIsOpen={setIsOpen} t={t} />
           ))}
         </div>
       </div>
@@ -106,11 +108,11 @@ const SidebarContent = ({ user, pathname, setIsOpen }: { user: any, pathname: st
       {user?.role === "ADMIN" && (
         <div>
           <p className="px-3 mb-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
-            Administration
+            {t.navigation.administration}
           </p>
           <div className="space-y-0.5">
             {ADMIN_ITEMS.map((item) => (
-              <NavLink key={item.href} {...item} pathname={pathname} setIsOpen={setIsOpen} />
+              <NavLink key={item.href} {...item} pathname={pathname} setIsOpen={setIsOpen} t={t} />
             ))}
           </div>
         </div>
@@ -129,7 +131,7 @@ const SidebarContent = ({ user, pathname, setIsOpen }: { user: any, pathname: st
           <p className="text-sm font-medium text-slate-900 truncate">
             {user?.name || user?.email}
           </p>
-          <p className="text-xs text-slate-500 truncate">{user?.role}</p>
+          <p className="text-xs text-slate-500 truncate">{t.users[user?.role as keyof typeof t.users] || user?.role}</p>
         </div>
       </div>
     </div>
@@ -139,6 +141,7 @@ const SidebarContent = ({ user, pathname, setIsOpen }: { user: any, pathname: st
 export function Sidebar({ user }: { user: any }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const t = useTranslation();
 
   // Prevent body scroll when drawer is open on mobile
   useEffect(() => {
@@ -172,7 +175,7 @@ export function Sidebar({ user }: { user: any }) {
 
       {/* Desktop sidebar — always visible on xl+ */}
       <div className="hidden xl:flex xl:flex-col xl:w-64 xl:shrink-0">
-        <SidebarContent user={user} pathname={pathname} setIsOpen={setIsOpen} />
+        <SidebarContent user={user} pathname={pathname} setIsOpen={setIsOpen} t={t} />
       </div>
 
       {/* Mobile drawer */}
@@ -181,7 +184,7 @@ export function Sidebar({ user }: { user: any }) {
           isOpen ? "translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"
         }`}
       >
-        <SidebarContent user={user} pathname={pathname} setIsOpen={setIsOpen} />
+        <SidebarContent user={user} pathname={pathname} setIsOpen={setIsOpen} t={t} />
       </div>
     </>
   );

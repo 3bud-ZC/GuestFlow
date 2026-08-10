@@ -16,10 +16,11 @@ import { Locale } from "@/lib/i18n/types";
 export default async function TasksPage({
   searchParams,
 }: {
-  searchParams: { status?: string; priority?: string; page?: string };
+  searchParams: Promise<{ status?: string; priority?: string; page?: string }>;
 }) {
-  const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
-  const data = await taskService.getTasks({ ...searchParams, page });
+  const resolvedSearchParams = await searchParams;
+  const page = resolvedSearchParams.page ? parseInt(resolvedSearchParams.page, 10) : 1;
+  const data = await taskService.getTasks({ ...resolvedSearchParams, page });
   const tasks = data.items || [];
   const totalPages = data.totalPages || 1;
   const cookieStore = await cookies();
@@ -43,11 +44,11 @@ export default async function TasksPage({
         <Card>
           <CardContent className="p-4 sm:p-5">
               <form className="flex flex-wrap sm:flex-nowrap gap-3 items-center">
-                <select name="status" defaultValue={searchParams.status || "ALL"} className="block w-full sm:w-auto py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
+                <select name="status" defaultValue={resolvedSearchParams.status || "ALL"} className="block w-full sm:w-auto py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
                   <option value="ALL">{t.common.allStatuses || 'All Statuses'}</option>
                   {Object.values(TaskStatus).map(s => <option key={s} value={s}>{t.tasks[s as keyof typeof t.tasks] || s}</option>)}
                 </select>
-                <select name="priority" defaultValue={searchParams.priority || "ALL"} className="block w-full sm:w-auto py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
+                <select name="priority" defaultValue={resolvedSearchParams.priority || "ALL"} className="block w-full sm:w-auto py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
                   <option value="ALL">{t.common.allPriorities || 'All Priorities'}</option>
                   {Object.values(TaskPriority).map(p => <option key={p} value={p}>{t.tasks[p as keyof typeof t.tasks] || p}</option>)}
                 </select>

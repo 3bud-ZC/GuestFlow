@@ -14,8 +14,9 @@ import { cookies } from "next/headers";
 import { getDictionary } from "@/lib/i18n";
 import { Locale } from "@/lib/i18n/types";
 
-export default async function ReservationDetailsPage({ params }: { params: { id: string } }) {
-  const reservation = await reservationService.getReservationById(params.id);
+export default async function ReservationDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const reservation = await reservationService.getReservationById(id);
   if (!reservation) notFound();
 
   const messages = await messageService.getReservationMessages(reservation.id);

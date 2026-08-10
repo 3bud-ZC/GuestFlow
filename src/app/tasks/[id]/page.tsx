@@ -6,8 +6,9 @@ import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ArrowLeft, CheckSquare, Clock, AlignLeft, Flag, Tag, Link2, CalendarCheck } from "lucide-react";
 
-export default async function TaskDetailsPage({ params }: { params: { id: string } }) {
-  const task = await taskService.getTaskById(params.id);
+export default async function TaskDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const task = await taskService.getTaskById(id);
   if (!task) notFound();
 
   return (
