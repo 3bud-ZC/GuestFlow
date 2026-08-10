@@ -36,16 +36,18 @@ export default async function CalendarPage({
   
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   
-  const properties = await propertyService.getProperties();
-  const rooms = propertyId ? properties.find(p => p.id === propertyId)?.rooms || [] : [];
-  
-  const calendarData = await calendarService.getCalendarData(
-    calendarStart,
-    calendarEnd,
-    propertyId,
-    roomId
-  );
+  const [properties, calendarData, cookieStore] = await Promise.all([
+    propertyService.getPropertiesForSelector(),
+    calendarService.getCalendarData(
+      calendarStart,
+      calendarEnd,
+      propertyId,
+      roomId
+    ),
+    cookies(),
+  ]);
 
+  const rooms = propertyId ? properties.find(p => p.id === propertyId)?.rooms || [] : [];
   const prevMonth = subMonths(displayDate, 1);
   const nextMonth = addMonths(displayDate, 1);
   
@@ -58,7 +60,6 @@ export default async function CalendarPage({
     return `?${params.toString()}`;
   };
 
-  const cookieStore = await cookies();
   const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
   const t = getDictionary(locale);
   const isRtl = locale === 'ar';

@@ -130,26 +130,52 @@ test.describe('Production E2E Tests', () => {
     }
   });
 
+  test.describe('Properties Route Recovery & QA', () => {
+    test('should render /properties without application error boundary and allow clicking Manage and Connect Airbnb', async ({ page }) => {
+      const errors: string[] = [];
+      page.on('console', msg => {
+        if (msg.type() === 'error') errors.push(msg.text());
+      });
+
+      const response = await page.goto('/properties');
+      expect(response?.status()).toBeLessThan(400);
+
+      await assertNoErrorBoundary(page);
+      await expect(page.locator('h1')).toHaveText(/Properties|العقارات/);
+
+      // Verify no React serialization error or nested link warnings in console
+      const severeErrors = errors.filter(e => e.includes('Event handlers cannot be passed') || e.includes('validateDOMNesting'));
+      expect(severeErrors).toHaveLength(0);
+
+      // Verify Manage link works
+      const manageLink = page.locator('a', { hasText: /Manage|إدارة/ }).first();
+      if (await manageLink.isVisible()) {
+        await manageLink.click();
+        await expect(page).toHaveURL(/\/properties\/[a-zA-Z0-9_-]+/);
+      }
+
+      // Back to properties and test Connect Airbnb
+      await page.goto('/properties');
+      const connectLink = page.locator('a', { hasText: /Connect Airbnb|ربط Airbnb/ }).first();
+      if (await connectLink.isVisible()) {
+        await connectLink.click();
+        await expect(page).toHaveURL(/\/properties\/connect-airbnb/);
+      }
+    });
+  });
+
   test.describe('Viewport QA Matrix', () => {
     test('Verify Quick Add dropdown and mobile sidebar drawer', async ({ page, isMobile, viewport }) => {
       await page.goto('/');
 
       if (isMobile || (viewport && viewport.width < 1024)) {
-        // On mobile/tablet, we expect a mobile sidebar drawer toggle
-        const menuButton = page.getByRole('button', { name: /menu|open/i });
-        // Since we don't know the exact accessible name, we can check for a button that might open the drawer
-        // Or we just check that the main sidebar is hidden and can be triggered.
-        // If we don't know the exact selector, we can look for generic mobile navigation patterns.
         const nav = page.locator('nav');
         await expect(nav).toBeAttached();
       } else {
-        // On desktop, expect sidebar to be visible
         const nav = page.locator('nav');
         await expect(nav).toBeVisible();
       }
 
-      // Quick Add dropdown
-      // Typically a button with a plus icon or "Add"
       const bodyText = await page.textContent('body');
       expect(bodyText?.length).toBeGreaterThan(0);
     });

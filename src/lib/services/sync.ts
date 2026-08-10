@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { airbnbService } from "./airbnb";
 import ical from 'node-ical';
 import { ReservationPlatform, ReservationStatus, TaskPriority, TaskStatus } from "@prisma/client";
+import crypto from 'crypto';
 
 export const syncService = {
   async syncRoom(roomId: string) {
@@ -110,7 +111,6 @@ export const syncService = {
               unchanged++;
             }
           } else {
-            const crypto = require('crypto');
             const stableHash = crypto.createHash('sha256').update(room.id + uid).digest('hex').substring(0, 8).toUpperCase();
             // New imported reservation without guest identity
             await db.reservation.create({

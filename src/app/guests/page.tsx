@@ -20,10 +20,12 @@ export default async function GuestsPage({
   const resolvedSearchParams = await searchParams;
   const query = resolvedSearchParams.q || "";
   const page = resolvedSearchParams.page ? parseInt(resolvedSearchParams.page, 10) : 1;
-  const data = await guestService.getGuests({ query, page });
+  const [data, cookieStore] = await Promise.all([
+    guestService.getGuests({ query, page }),
+    cookies(),
+  ]);
   const guests = data.items || [];
   const totalPages = data.totalPages || 1;
-  const cookieStore = await cookies();
   const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
   const t = getDictionary(locale);
   const isRtl = locale === 'ar';

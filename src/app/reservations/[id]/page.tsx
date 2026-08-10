@@ -19,13 +19,15 @@ export default async function ReservationDetailsPage({ params }: { params: Promi
   const reservation = await reservationService.getReservationById(id);
   if (!reservation) notFound();
 
-  const messages = await messageService.getReservationMessages(reservation.id);
-  const tasks = await db.task.findMany({
-    where: { reservationId: reservation.id },
-    orderBy: { createdAt: 'desc' }
-  });
+  const [messages, tasks, cookieStore] = await Promise.all([
+    messageService.getReservationMessages(reservation.id),
+    db.task.findMany({
+      where: { reservationId: reservation.id },
+      orderBy: { createdAt: 'desc' }
+    }),
+    cookies(),
+  ]);
 
-  const cookieStore = await cookies();
   const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
   const t = getDictionary(locale);
   const isRtl = locale === 'ar';

@@ -126,11 +126,9 @@ export function RoomRow({ room, isAdmin, propertyId }: { room: any, isAdmin: boo
                 >
                   {syncing ? "Syncing..." : "Sync Now"}
                 </Button>
-                <a href={`/calendar?roomId=${room.id}`}>
-                  <Button variant="outline" size="sm">
-                    View Calendar
-                  </Button>
-                </a>
+                <Button href={`/calendar?roomId=${room.id}`} variant="outline" size="sm">
+                  View Calendar
+                </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 

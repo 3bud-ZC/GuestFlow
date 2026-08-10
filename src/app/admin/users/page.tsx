@@ -9,11 +9,14 @@ import { getDictionary } from "@/lib/i18n";
 import { Locale } from "@/lib/i18n/types";
 
 export default async function AdminUsersPage() {
-  const users = await db.user.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  const [users, cookieStore] = await Promise.all([
+    db.user.findMany({
+      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    cookies(),
+  ]);
 
-  const cookieStore = await cookies();
   const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
   const t = getDictionary(locale);
   const isRtl = locale === 'ar';

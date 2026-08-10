@@ -1,7 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
+
+function getInitialLocale(): "en" | "ar" {
+  if (typeof document !== "undefined") {
+    const cookieLocale = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("gf-locale="))
+      ?.split("=")[1];
+    if (cookieLocale === "ar" || document.documentElement.lang === "ar") {
+      return "ar";
+    }
+  }
+  return "en";
+}
 
 export default function ErrorBoundary({
   error,
@@ -10,10 +23,13 @@ export default function ErrorBoundary({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const [locale] = useState<"en" | "ar">(getInitialLocale);
+
   useEffect(() => {
-    // Log the error to an error reporting service
     console.error("Application error:", error);
   }, [error]);
+
+  const isAr = locale === "ar";
 
   return (
     <div className="min-h-[400px] flex items-center justify-center p-4">
@@ -24,12 +40,12 @@ export default function ErrorBoundary({
         
         <div className="space-y-2">
           <h2 className="text-xl font-bold text-slate-900">
-            Something went wrong <span className="text-slate-300 mx-2">|</span> حدث خطأ
+            {isAr ? "حدث خطأ" : "Something went wrong"}
           </h2>
           <p className="text-sm text-slate-500">
-            We encountered an unexpected error. Please try again.
-            <br />
-            لقد واجهنا خطأ غير متوقع. يرجى المحاولة مرة أخرى.
+            {isAr
+              ? "واجهنا خطأ غير متوقع. يرجى المحاولة مرة أخرى."
+              : "We encountered an unexpected error. Please try again."}
           </p>
         </div>
 
@@ -37,7 +53,7 @@ export default function ErrorBoundary({
           onClick={() => reset()}
           className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors w-full sm:w-auto"
         >
-          Try again <span className="text-blue-200 mx-2">|</span> حاول مرة أخرى
+          {isAr ? "حاول مرة أخرى" : "Try again"}
         </button>
       </div>
     </div>

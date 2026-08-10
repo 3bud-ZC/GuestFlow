@@ -24,14 +24,18 @@ import { getDictionary } from "@/lib/i18n";
 import { Locale } from "@/lib/i18n/types";
 
 export default async function SettingsPage() {
-  const user = await getCurrentUser();
+  const [user, property, templates, cookieStore] = await Promise.all([
+    getCurrentUser(),
+    db.property.findFirst({
+      include: { propertySettings: true, rooms: true }
+    }),
+    db.messageTemplate.findMany({ orderBy: { type: 'asc' } }),
+    cookies(),
+  ]);
+
   if (!user || user.role !== "ADMIN") {
     redirect("/");
   }
-
-  const property = await db.property.findFirst({
-    include: { propertySettings: true, rooms: true }
-  });
 
   if (!property) {
     return (
@@ -46,7 +50,6 @@ export default async function SettingsPage() {
   }
 
   const settings = property.propertySettings;
-  const cookieStore = await cookies();
   const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
   const t = getDictionary(locale);
   const isRtl = locale === 'ar';
@@ -310,7 +313,7 @@ export default async function SettingsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {(await db.messageTemplate.findMany()).map((template) => (
+              {templates.map((template) => (
                 <tr key={template.id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{t.messages[template.type as keyof typeof t.messages] || template.type}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{template.metaTemplateName}</td>

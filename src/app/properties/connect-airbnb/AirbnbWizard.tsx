@@ -7,7 +7,10 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { CheckCircle2, ChevronDown, ChevronRight, HelpCircle, Loader2 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
+import { useRouter } from "next/navigation";
+
 export function AirbnbWizard() {
+  const router = useRouter();
   const t = useTranslation();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mode, setMode] = useState<"existing" | "new" | null>(null);
@@ -29,12 +32,20 @@ export function AirbnbWizard() {
 
   useEffect(() => {
     if (step === 2) {
-      setLoadingProps(true);
-      getPropertiesAndRooms().then((data) => {
-        setProperties(data);
-        if (data.length > 0) setSelectedPropertyId(data[0].id);
-        setLoadingProps(false);
+      let isMounted = true;
+      Promise.resolve().then(() => {
+        if (isMounted) setLoadingProps(true);
       });
+      getPropertiesAndRooms().then((data) => {
+        if (isMounted) {
+          setProperties(data);
+          if (data.length > 0) setSelectedPropertyId(data[0].id);
+          setLoadingProps(false);
+        }
+      });
+      return () => {
+        isMounted = false;
+      };
     }
   }, [step]);
 
@@ -66,7 +77,8 @@ export function AirbnbWizard() {
       } else {
         await connectNewRoom(selectedPropertyId, roomName, icalUrl);
       }
-      window.location.href = `/properties/${selectedPropertyId}`;
+      router.push(`/properties/${selectedPropertyId}`);
+      router.refresh();
     } catch (e: any) {
       setError(e.message || "Failed to connect calendar");
       setConnecting(false);

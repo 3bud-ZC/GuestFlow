@@ -49,4 +49,14 @@ pm2 restart guestflow || pm2 start npm --name "guestflow" -- run start
 # pm2 save to persist
 pm2 save
 
+# 9. Release retention: Keep current release and previous 4 timestamped releases
+echo "Cleaning up old releases in ${RELEASE_DIR}..."
+cd "$RELEASE_DIR"
+ls -1t | grep -E '^[0-9]+$' | tail -n +6 | while read -r old_release; do
+  if [ -n "$old_release" ] && [ -d "$RELEASE_DIR/$old_release" ]; then
+    echo "Removing old release: $old_release"
+    rm -rf "$RELEASE_DIR/$old_release"
+  fi
+done
+
 echo "Deployed to $NEW_RELEASE_PATH"

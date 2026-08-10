@@ -3,14 +3,43 @@ import { PropertyInput, PropertySchema } from "../validation/property";
 
 export const propertyService = {
   async getProperties() {
-    return db.property.findMany({
-      include: {
+    const properties = await db.property.findMany({
+      select: {
+        id: true,
+        name: true,
+        address: true,
         _count: {
           select: { rooms: true },
         },
         rooms: {
-          select: { airbnbIcalUrl: true }
-        }
+          where: { airbnbIcalUrl: { not: null } },
+          select: { id: true },
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+
+    return properties.map((p) => ({
+      id: p.id,
+      name: p.name,
+      address: p.address,
+      _count: p._count,
+      airbnbConnectedCount: p.rooms.length,
+    }));
+  },
+
+  async getPropertiesForSelector() {
+    return db.property.findMany({
+      select: {
+        id: true,
+        name: true,
+        rooms: {
+          select: {
+            id: true,
+            name: true,
+          },
+          orderBy: { name: "asc" },
+        },
       },
       orderBy: { name: "asc" },
     });

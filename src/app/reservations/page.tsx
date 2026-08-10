@@ -26,10 +26,12 @@ export default async function ReservationsPage({
 }) {
   const resolvedSearchParams = await searchParams;
   const page = resolvedSearchParams.page ? parseInt(resolvedSearchParams.page, 10) : 1;
-  const data = await reservationService.getReservations({ ...resolvedSearchParams, page });
+  const [data, cookieStore] = await Promise.all([
+    reservationService.getReservations({ ...resolvedSearchParams, page }),
+    cookies(),
+  ]);
   const reservations = data.items || [];
   const totalPages = data.totalPages || 1;
-  const cookieStore = await cookies();
   const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
   const t = getDictionary(locale);
   const isRtl = locale === 'ar';

@@ -10,10 +10,12 @@ import { ArrowLeft, Building2, MapPin, DoorClosed } from "lucide-react";
 
 export default async function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const property = await propertyService.getPropertyById(id);
-  if (!property) notFound();
+  const [property, user] = await Promise.all([
+    propertyService.getPropertyById(id),
+    getCurrentUser(),
+  ]);
 
-  const user = await getCurrentUser();
+  if (!property) notFound();
   const isAdmin = user?.role === "ADMIN";
 
   return (

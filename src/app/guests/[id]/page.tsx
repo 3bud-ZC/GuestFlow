@@ -12,10 +12,12 @@ import { Locale } from "@/lib/i18n/types";
 
 export default async function GuestDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const guest = await guestService.getGuestById(id);
+  const [guest, cookieStore] = await Promise.all([
+    guestService.getGuestById(id),
+    cookies(),
+  ]);
+
   if (!guest) notFound();
-  
-  const cookieStore = await cookies();
   const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
   const t = getDictionary(locale);
   const isRtl = locale === 'ar';
