@@ -114,7 +114,7 @@ export const automationService = {
       include: { guest: true, property: true }
     });
 
-    if (!reservation) return;
+    if (!reservation || !reservation.guest) return;
 
     const settings = await this.getPropertySettings(reservation.propertyId);
     
@@ -189,7 +189,7 @@ export const automationService = {
       where: { id: reservationId },
       include: { guest: true }
     });
-    if (!reservation) return;
+    if (!reservation || !reservation.guest) return;
 
     // Cancel pending pre-arrival messages
     await this.cancelScheduledMessage(reservation.id, MessageType.LOCATION, "Guest checked in");
@@ -210,7 +210,7 @@ export const automationService = {
       where: { id: reservationId },
       include: { guest: true }
     });
-    if (!reservation) return;
+    if (!reservation || !reservation.guest) return;
 
     // Cancel pending checkout reminders
     await this.cancelScheduledMessage(reservation.id, MessageType.CHECKOUT_REMINDER, "Guest checked out");

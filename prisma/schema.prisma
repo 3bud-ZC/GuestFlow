@@ -96,16 +96,24 @@ model Property {
   rooms            Room[]
   propertySettings PropertySettings?
   reservations     Reservation[]
+  availabilityBlocks AvailabilityBlock[]
 }
 
 model Room {
-  id           String        @id @default(uuid())
-  name         String
-  propertyId   String
-  property     Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  reservations Reservation[]
+  id                 String        @id @default(uuid())
+  name               String
+  propertyId         String
+  property           Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  airbnbIcalUrl      String?       @unique
+  airbnbListingId    String?
+  airbnbCalendarName String?
+  airbnbSyncEnabled  Boolean       @default(false)
+  airbnbLastSyncedAt DateTime?
+  airbnbLastSyncError String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  reservations       Reservation[]
+  availabilityBlocks AvailabilityBlock[]
 
   @@index([propertyId])
 }
@@ -129,30 +137,53 @@ model Guest {
 }
 
 model Reservation {
-  id             String              @id @default(uuid())
-  code           String              @unique
-  platform       ReservationPlatform
-  guestId        String
-  guest          Guest               @relation(fields: [guestId], references: [id], onDelete: Restrict)
-  propertyId     String
-  property       Property            @relation(fields: [propertyId], references: [id], onDelete: Restrict)
-  roomId         String
-  room           Room                @relation(fields: [roomId], references: [id], onDelete: Restrict)
-  checkInDate    DateTime
-  checkOutDate   DateTime
-  numberOfGuests Int
-  status         ReservationStatus   @default(CONFIRMED)
+  id               String              @id @default(uuid())
+  code             String              @unique
+  platform         ReservationPlatform
+  guestId          String?
+  guest            Guest?              @relation(fields: [guestId], references: [id], onDelete: Restrict)
+  propertyId       String
+  property         Property            @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  roomId           String
+  room             Room                @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  checkInDate      DateTime
+  checkOutDate     DateTime
+  numberOfGuests   Int                 @default(1)
+  status           ReservationStatus   @default(CONFIRMED)
   actualCheckInAt  DateTime?
   actualCheckOutAt DateTime?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  messages       Message[]
-  tasks          Task[]
-  activityLogs   ActivityLog[]
+  externalSource   String?
+  externalEventId  String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  messages         Message[]
+  tasks            Task[]
+  activityLogs     ActivityLog[]
 
+  @@unique([roomId, externalEventId])
   @@index([propertyId])
   @@index([checkInDate])
   @@index([status])
+}
+
+model AvailabilityBlock {
+  id              String   @id @default(uuid())
+  propertyId      String
+  property        Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  roomId          String
+  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  startDate       DateTime
+  endDate         DateTime
+  externalSource  String?
+  externalEventId String?
+  reason          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([roomId, externalEventId])
+  @@index([propertyId])
+  @@index([roomId])
+  @@index([startDate])
 }
 
 model MessageTemplate {

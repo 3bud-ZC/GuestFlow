@@ -157,19 +157,34 @@ export default async function DashboardPage() {
                   {data.todaysCheckins.map(res => (
                     <TableRow key={res.id}>
                       <TableCell>
-                        <div className="font-medium text-slate-900">{res.guest.firstName} {res.guest.lastName}</div>
-                        <div className="text-xs text-slate-500 mt-0.5">{res.code} · {res.platform}</div>
+                        {res.guest ? (
+                          <>
+                            <div className="font-medium text-slate-900">{res.guest.firstName} {res.guest.lastName}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">{res.code} · {res.platform}</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="font-medium text-red-600 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" /> Guest details required
+                            </div>
+                            <div className="text-xs text-slate-500 mt-0.5">{res.code} · {res.platform}</div>
+                          </>
+                        )}
                       </TableCell>
                       <TableCell className="text-slate-600">
                         {res.room.name}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={
-                          res.guest.documentStatus === 'RECEIVED' ? 'success' :
-                          res.guest.documentStatus === 'PENDING' ? 'warning' : 'neutral'
-                        }>
-                          {res.guest.documentStatus}
-                        </Badge>
+                        {res.guest ? (
+                          <Badge variant={
+                            res.guest.documentStatus === 'RECEIVED' ? 'success' :
+                            res.guest.documentStatus === 'PENDING' ? 'warning' : 'neutral'
+                          }>
+                            {res.guest.documentStatus}
+                          </Badge>
+                        ) : (
+                          <Badge variant="warning">MISSING</Badge>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button href={`/reservations/${res.id}`} variant="ghost" size="sm">
@@ -207,8 +222,19 @@ export default async function DashboardPage() {
                   {data.todaysCheckouts.map(res => (
                     <TableRow key={res.id}>
                       <TableCell>
-                        <div className="font-medium text-slate-900">{res.guest.firstName} {res.guest.lastName}</div>
-                        <div className="text-xs text-slate-500 mt-0.5">{res.code}</div>
+                        {res.guest ? (
+                          <>
+                            <div className="font-medium text-slate-900">{res.guest.firstName} {res.guest.lastName}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">{res.code}</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="font-medium text-red-600 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" /> Guest details required
+                            </div>
+                            <div className="text-xs text-slate-500 mt-0.5">{res.code}</div>
+                          </>
+                        )}
                       </TableCell>
                       <TableCell className="text-slate-600">
                         {res.room.name}

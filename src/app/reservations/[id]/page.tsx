@@ -52,9 +52,15 @@ export default async function ReservationDetailsPage({ params }: { params: { id:
                     <User className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                     <div>
                       <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Guest</div>
-                      <Link href={`/guests/${reservation.guest.id}`} className="mt-0.5 block text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline">
-                        {reservation.guest.firstName} {reservation.guest.lastName}
-                      </Link>
+                      {reservation.guest ? (
+                        <Link href={`/guests/${reservation.guest.id}`} className="mt-0.5 block text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline">
+                          {reservation.guest.firstName} {reservation.guest.lastName}
+                        </Link>
+                      ) : (
+                        <div className="mt-0.5 block text-sm font-medium text-red-600">
+                          Guest Details Required
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -190,7 +196,7 @@ export default async function ReservationDetailsPage({ params }: { params: { id:
           <Card className="sticky top-6">
             <CardHeader title="Reservation Status" />
             <CardContent>
-              <StatusForm reservationId={reservation.id} currentStatus={reservation.status} guestDocumentStatus={reservation.guest.documentStatus} />
+              <StatusForm reservationId={reservation.id} currentStatus={reservation.status} guestDocumentStatus={reservation.guest ? reservation.guest.documentStatus : 'PENDING'} />
             </CardContent>
           </Card>
 
@@ -214,16 +220,22 @@ export default async function ReservationDetailsPage({ params }: { params: { id:
             <CardHeader title="Guest ID Status" />
             <CardContent>
               <div className="flex items-center justify-between">
-                <Badge variant={
-                  reservation.guest.documentStatus === 'RECEIVED' ? 'success' :
-                  reservation.guest.documentStatus === 'PENDING' ? 'warning' :
-                  'neutral'
-                }>
-                  {reservation.guest.documentStatus}
-                </Badge>
-                <Link href={`/guests/${reservation.guest.id}`} className="text-sm text-blue-600 hover:text-blue-700 hover:underline inline-flex items-center gap-1">
-                  Update <ExternalLink className="w-3 h-3" />
-                </Link>
+                {reservation.guest ? (
+                  <>
+                    <Badge variant={
+                      reservation.guest.documentStatus === 'RECEIVED' ? 'success' :
+                      reservation.guest.documentStatus === 'PENDING' ? 'warning' :
+                      'neutral'
+                    }>
+                      {reservation.guest.documentStatus}
+                    </Badge>
+                    <Link href={`/guests/${reservation.guest.id}`} className="text-sm text-blue-600 hover:text-blue-700 hover:underline inline-flex items-center gap-1">
+                      Update <ExternalLink className="w-3 h-3" />
+                    </Link>
+                  </>
+                ) : (
+                  <Badge variant="warning">MISSING</Badge>
+                )}
               </div>
             </CardContent>
           </Card>

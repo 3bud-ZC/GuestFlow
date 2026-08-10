@@ -2,6 +2,7 @@ import { propertyService } from "@/lib/services/property";
 import { getCurrentUser } from "@/lib/auth";
 import Link from "next/link";
 import { AddRoomDrawer } from "./AddRoomDrawer";
+import { RoomRow } from "./RoomRow";
 import { notFound } from "next/navigation";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -56,14 +57,7 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
                 </div>
               ) : (
                 property.rooms.map((room) => (
-                  <div key={room.id} className="p-4 sm:p-5 flex justify-between items-center hover:bg-slate-50/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                        <DoorClosed className="w-5 h-5" />
-                      </div>
-                      <span className="font-medium text-slate-900">{room.name}</span>
-                    </div>
-                  </div>
+                  <RoomRow key={room.id} room={room} isAdmin={isAdmin} propertyId={property.id} />
                 ))
               )}
             </div>

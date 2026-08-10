@@ -4,7 +4,7 @@ import { ReservationPlatform, ReservationStatus } from "@prisma/client";
 export const ReservationSchema = z.object({
   code: z.string().min(1, "Reservation code is required"),
   platform: z.nativeEnum(ReservationPlatform),
-  guestId: z.string().uuid("Invalid guest ID"),
+  guestId: z.string().uuid("Invalid guest ID").optional().nullable(),
   propertyId: z.string().uuid("Invalid property ID"),
   roomId: z.string().uuid("Invalid room ID"),
   checkInDate: z.coerce.date(),

@@ -49,7 +49,7 @@ export async function createReservationAction(formData: FormData) {
 
   // Auto-task creation: Missing Phone
   const reservation = await reservationService.getReservationById(reservationId);
-  if (reservation && !reservation.guest.phone) {
+  if (reservation && reservation.guest && !reservation.guest.phone) {
     await db.task.create({
       data: {
         title: "Get guest phone number",

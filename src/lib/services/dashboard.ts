@@ -52,7 +52,7 @@ export const dashboardService = {
 
     // 1. Missing IDs for check-ins today
     todaysCheckins.forEach(res => {
-      if (res.guest.documentStatus === 'PENDING') {
+      if (res.guest && res.guest.documentStatus === 'PENDING') {
         // Deduplicate: avoid if a task already exists for this reservation regarding missing ID/phone
         const hasTask = openTasks.some(t => t.reservationId === res.id);
         if (!hasTask) {
@@ -60,6 +60,17 @@ export const dashboardService = {
             type: 'MISSING_ID',
             message: `${res.guest.firstName} ${res.guest.lastName} checking in today is missing ID`,
             link: `/guests/${res.guest.id}`,
+            urgency: 'HIGH'
+          });
+        }
+      } else if (!res.guest && res.platform === 'AIRBNB') {
+        // Airbnb reservation missing guest details entirely
+        const hasTask = openTasks.some(t => t.reservationId === res.id);
+        if (!hasTask) {
+          actionRequired.push({
+            type: 'MISSING_GUEST',
+            message: `Airbnb check-in today (${res.code}) requires guest details`,
+            link: `/reservations/${res.id}`,
             urgency: 'HIGH'
           });
         }
@@ -91,9 +102,10 @@ export const dashboardService = {
     // 4. Pending Check-ins (after 2 PM or generic)
     todaysCheckins.forEach(res => {
       if (res.status === 'CONFIRMED') {
+        const name = res.guest ? res.guest.firstName : 'Unknown Guest';
         actionRequired.push({
           type: 'CHECK_IN_PENDING',
-          message: `${res.guest.firstName} check-in pending for ${res.room.name}`,
+          message: `${name} check-in pending for ${res.room.name}`,
           link: `/reservations/${res.id}`,
           urgency: 'MEDIUM'
         });
@@ -103,9 +115,10 @@ export const dashboardService = {
     // 5. Pending Check-outs
     todaysCheckouts.forEach(res => {
       if (res.status === 'CHECKED_IN') {
+        const name = res.guest ? res.guest.firstName : 'Unknown Guest';
         actionRequired.push({
           type: 'CHECK_OUT_PENDING',
-          message: `${res.guest.firstName} check-out pending for ${res.room.name}`,
+          message: `${name} check-out pending for ${res.room.name}`,
           link: `/reservations/${res.id}`,
           urgency: 'MEDIUM'
         });

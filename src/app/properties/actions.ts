@@ -33,11 +33,45 @@ export async function createRoomAction(formData: FormData) {
 
   const name = formData.get("name") as string;
   const propertyId = formData.get("propertyId") as string;
+  const airbnbIcalUrl = formData.get("airbnbIcalUrl") as string || undefined;
+  const airbnbListingId = formData.get("airbnbListingId") as string || undefined;
+  const airbnbCalendarName = formData.get("airbnbCalendarName") as string || undefined;
 
   await roomService.createRoom({
     name,
     propertyId,
+    ...(airbnbIcalUrl ? {
+      airbnbIcalUrl,
+      airbnbListingId,
+      airbnbCalendarName,
+      airbnbSyncEnabled: true,
+    } : {})
   });
 
+  revalidatePath(`/properties/${propertyId}`);
+}
+
+export async function probeAirbnbConnectionAction(url: string) {
+  const user = await getCurrentUser();
+  if (user?.role !== Role.ADMIN) throw new Error("Unauthorized");
+  
+  const { airbnbService } = await import('@/lib/services/airbnb');
+  return airbnbService.probe(url);
+}
+
+export async function syncAirbnbAction(roomId: string, propertyId: string) {
+  const user = await getCurrentUser();
+  if (user?.role !== Role.ADMIN) throw new Error("Unauthorized");
+  
+  const result = await roomService.syncAirbnbConnection(roomId);
+  revalidatePath(`/properties/${propertyId}`);
+  return result;
+}
+
+export async function disconnectAirbnbAction(roomId: string, propertyId: string) {
+  const user = await getCurrentUser();
+  if (user?.role !== Role.ADMIN) throw new Error("Unauthorized");
+  
+  await roomService.disconnectAirbnbConnection(roomId);
   revalidatePath(`/properties/${propertyId}`);
 }

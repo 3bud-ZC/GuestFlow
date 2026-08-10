@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/Table";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Search, Plus, Filter, MoreHorizontal } from "lucide-react";
+import { Search, Plus, Filter, MoreHorizontal, AlertTriangle } from "lucide-react";
 
 export default async function ReservationsPage({
   searchParams,
@@ -118,12 +118,23 @@ export default async function ReservationsPage({
                     <div className="text-xs text-slate-500">{res.platform}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm font-medium text-slate-900">
-                      <Link href={`/guests/${res.guest.id}`} className="hover:underline">
-                        {res.guest.firstName} {res.guest.lastName}
-                      </Link>
-                    </div>
-                    <div className="text-xs text-slate-500 mt-1">{res.numberOfGuests} guest{res.numberOfGuests !== 1 && 's'}</div>
+                    {res.guest ? (
+                      <>
+                        <div className="text-sm font-medium text-slate-900">
+                          <Link href={`/guests/${res.guest.id}`} className="hover:underline">
+                            {res.guest.firstName} {res.guest.lastName}
+                          </Link>
+                        </div>
+                        <div className="text-xs text-slate-500 mt-1">{res.numberOfGuests} guest{res.numberOfGuests !== 1 && 's'}</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-sm font-medium text-red-600 flex items-center gap-1">
+                          <AlertTriangle className="w-4 h-4" /> Guest details required
+                        </div>
+                        <div className="text-xs text-slate-500 mt-1">Imported from Airbnb</div>
+                      </>
+                    )}
                   </TableCell>
                   <TableCell className="text-sm text-slate-600">
                     <div className="font-medium text-slate-700">{new Date(res.checkInDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>

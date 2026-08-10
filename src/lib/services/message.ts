@@ -49,7 +49,7 @@ export const messageService = {
     // Basic resolution to match Meta template components
     // A production implementation would dynamically map these based on template metadata, 
     // but for MVP we return an array of body parameters based on expected GuestFlow template types.
-    const guestName = reservation.guest.firstName;
+    const guestName = reservation.guest ? reservation.guest.firstName : "Guest";
     const propertyName = reservation.property.name;
     const address = reservation.property.address || "Property Address";
 
@@ -94,6 +94,7 @@ export const messageService = {
     });
 
     if (!reservation) throw new Error("Reservation not found");
+    if (!reservation.guest) throw new Error("Guest details are required");
     if (!reservation.guest.phone) throw new Error("Guest does not have a phone number");
 
     const phone = whatsappService.normalizePhone(reservation.guest.phone);
