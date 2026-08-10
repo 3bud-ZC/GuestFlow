@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { Role } from "@prisma/client";
 
 export async function updateTemplateAction(id: string, data: { metaTemplateName: string; languageCode: string; enabled: boolean; description?: string }) {
-  await requireRole(["ADMIN" as any]);
+  await requireRole([Role.ADMIN]);
 
   try {
     const updated = await messageTemplateService.updateTemplate(id, data);
