@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 
@@ -8,7 +10,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: React.ReactNode;
 };
 
-export function Button({ variant = "primary", size = "md", href, icon, children, className = "", ...props }: ButtonProps) {
+export function Button({ variant = "primary", size = "md", href, icon, children, className = "", onClick, ...props }: ButtonProps) {
   const base = "inline-flex items-center justify-center font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
   
   const sizes = {
@@ -29,7 +31,7 @@ export function Button({ variant = "primary", size = "md", href, icon, children,
 
   if (href) {
     return (
-      <Link href={href} className={classes}>
+      <Link href={href} className={classes} onClick={onClick as any}>
         {icon}
         {children}
       </Link>
