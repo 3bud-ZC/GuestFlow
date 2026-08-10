@@ -18,4 +18,4 @@ Record:
 - Actual production DB backup created: `/var/www/guestflow/backups/guestflow_backup_20260810_075458.sql`
 - Meta WhatsApp: PAUSED / external pending
 - actual production release path: /var/www/guestflow/releases/1786349273
-- final Git HEAD SHA: 92fd19162fc9e94ddfb9a9f54dd2bc0e50cd9868
+- final Git HEAD SHA: 1a4b0e32894ee0af5fd2b5910ffe958d1a08324a
