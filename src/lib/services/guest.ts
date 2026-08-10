@@ -2,31 +2,48 @@ import { db } from "@/lib/db";
 import { GuestInput, GuestSchema } from "../validation/guest";
 
 export const guestService = {
-  async getGuests(query?: string) {
-    const where = query
+  async getGuests(filters?: { query?: string; page?: number; pageSize?: number }) {
+    const where = filters?.query
       ? {
           OR: [
-            { firstName: { contains: query, mode: "insensitive" as const } },
-            { lastName: { contains: query, mode: "insensitive" as const } },
-            { email: { contains: query, mode: "insensitive" as const } },
-            { phone: { contains: query, mode: "insensitive" as const } },
+            { firstName: { contains: filters?.query, mode: "insensitive" as const } },
+            { lastName: { contains: filters?.query, mode: "insensitive" as const } },
+            { email: { contains: filters?.query, mode: "insensitive" as const } },
+            { phone: { contains: filters?.query, mode: "insensitive" as const } },
           ],
         }
       : {};
 
-    return db.guest.findMany({
-      where,
-      include: {
-        _count: {
-          select: { reservations: true },
+    const page = filters?.page || 1;
+    const pageSize = filters?.pageSize || 25;
+    const skip = (page - 1) * pageSize;
+
+    const [items, total] = await Promise.all([
+      db.guest.findMany({
+        where,
+        select: {
+          id: true, firstName: true, lastName: true, email: true, phone: true, documentStatus: true,
+          _count: { select: { reservations: true } },
+          reservations: {
+            orderBy: { checkInDate: "desc" },
+            take: 1,
+            select: { checkInDate: true, checkOutDate: true, status: true }
+          },
         },
-        reservations: {
-          orderBy: { checkInDate: "desc" },
-          take: 1,
-        },
-      },
-      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-    });
+        orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+        skip,
+        take: pageSize,
+      }),
+      db.guest.count({ where })
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize)
+    };
   },
 
   async getGuestById(id: string) {

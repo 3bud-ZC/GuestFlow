@@ -9,6 +9,8 @@ export const reservationService = {
     status?: string;
     idStatus?: string;
     dateFilter?: string;
+    page?: number;
+    pageSize?: number;
   }) {
     let where: any = {};
 
@@ -52,15 +54,38 @@ export const reservationService = {
       }
     }
 
-    return db.reservation.findMany({
-      where,
-      include: {
-        guest: true,
-        property: true,
-        room: true,
-      },
-      orderBy: { checkInDate: "asc" },
-    });
+    const page = filters?.page || 1;
+    const pageSize = filters?.pageSize || 25;
+    const skip = (page - 1) * pageSize;
+
+    const [items, total] = await Promise.all([
+      db.reservation.findMany({
+        where,
+        select: {
+          id: true,
+          code: true,
+          platform: true,
+          status: true,
+          checkInDate: true,
+          checkOutDate: true,
+          guest: { select: { id: true, firstName: true, lastName: true, documentStatus: true } },
+          room: { select: { id: true, name: true } },
+          property: { select: { id: true, name: true } }
+        },
+        orderBy: { checkInDate: "asc" },
+        skip,
+        take: pageSize,
+      }),
+      db.reservation.count({ where })
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize)
+    };
   },
 
   async getReservationById(id: string) {

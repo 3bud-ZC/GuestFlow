@@ -8,6 +8,9 @@ export const propertyService = {
         _count: {
           select: { rooms: true },
         },
+        rooms: {
+          select: { airbnbIcalUrl: true }
+        }
       },
       orderBy: { name: "asc" },
     });

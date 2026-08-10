@@ -164,6 +164,9 @@ model Reservation {
   @@index([propertyId])
   @@index([checkInDate])
   @@index([status])
+  @@index([status, checkInDate])
+  @@index([status, checkOutDate])
+  @@index([roomId, checkInDate])
 }
 
 model AvailabilityBlock {
@@ -183,7 +186,7 @@ model AvailabilityBlock {
   @@unique([roomId, externalEventId])
   @@index([propertyId])
   @@index([roomId])
-  @@index([startDate])
+  @@index([roomId, startDate, endDate])
 }
 
 model MessageTemplate {
@@ -218,6 +221,7 @@ model Message {
 
   @@index([reservationId])
   @@index([guestId])
+  @@index([status, createdAt])
 }
 
 model Task {
@@ -239,6 +243,7 @@ model Task {
 
   @@index([status])
   @@index([reservationId])
+  @@index([status, priority])
 }
 
 model AutomationRule {

@@ -4,23 +4,41 @@ import { logActivity } from "./activity";
 import { TaskStatus } from "@prisma/client";
 
 export const taskService = {
-  async getTasks(filters?: { status?: string; priority?: string }) {
+  async getTasks(filters?: { status?: string; priority?: string; page?: number; pageSize?: number }) {
     let where: any = {};
     if (filters?.status && filters.status !== "ALL") where.status = filters.status;
     if (filters?.priority && filters.priority !== "ALL") where.priority = filters.priority;
 
-    return db.task.findMany({
-      where,
-      include: {
-        guest: true,
-        reservation: true,
-        assignedUser: true,
-      },
-      orderBy: [
-        { priority: "desc" },
-        { createdAt: "desc" }
-      ],
-    });
+    const page = filters?.page || 1;
+    const pageSize = filters?.pageSize || 25;
+    const skip = (page - 1) * pageSize;
+
+    const [items, total] = await Promise.all([
+      db.task.findMany({
+        where,
+        select: {
+          id: true, title: true, priority: true, status: true, dueDate: true, createdAt: true,
+          guest: { select: { id: true, firstName: true, lastName: true } },
+          reservation: { select: { id: true, code: true, room: { select: { name: true } } } },
+          assignedUser: { select: { id: true, name: true } },
+        },
+        orderBy: [
+          { priority: "desc" },
+          { createdAt: "desc" }
+        ],
+        skip,
+        take: pageSize,
+      }),
+      db.task.count({ where })
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize)
+    };
   },
 
   async getTaskById(id: string) {

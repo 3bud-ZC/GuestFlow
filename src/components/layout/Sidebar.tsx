@@ -19,14 +19,18 @@ import { useState, useEffect } from "react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/reservations", label: "Reservations", icon: CalendarDays },
+  { href: "/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/reservations", label: "Reservations", icon: BookOpen },
   { href: "/guests", label: "Guests", icon: Users },
+  { href: "/properties", label: "Properties", icon: Building2 },
+];
+
+const OPERATIONS_ITEMS = [
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/messages", label: "Messages", icon: MessageSquare },
 ];
 
 const ADMIN_ITEMS = [
-  { href: "/properties", label: "Properties", icon: Building2 },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/admin/users", label: "Users", icon: ShieldCheck },
 ];
@@ -86,6 +90,17 @@ const SidebarContent = ({ user, pathname, setIsOpen }: { user: any, pathname: st
         {NAV_ITEMS.map((item) => (
           <NavLink key={item.href} {...item} pathname={pathname} setIsOpen={setIsOpen} />
         ))}
+      </div>
+
+      <div>
+        <p className="px-3 mb-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+          Operations
+        </p>
+        <div className="space-y-0.5">
+          {OPERATIONS_ITEMS.map((item) => (
+            <NavLink key={item.href} {...item} pathname={pathname} setIsOpen={setIsOpen} />
+          ))}
+        </div>
       </div>
 
       {user?.role === "ADMIN" && (

@@ -7,14 +7,18 @@ import { Button } from "@/components/ui/Button";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/Table";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Search, Users } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
 
 export default async function GuestsPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: { q?: string; page?: string };
 }) {
   const query = searchParams.q || "";
-  const guests = await guestService.getGuests(query);
+  const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
+  const data = await guestService.getGuests({ query, page });
+  const guests = data.items || [];
+  const totalPages = data.totalPages || 1;
 
   return (
     <div className="space-y-6">
@@ -57,8 +61,10 @@ export default async function GuestsPage({
                 icon={Users}
                 title="No guests found"
                 description="Try a different search term or add a new guest."
-              />
-            ) : (
+          />
+        ) : (
+          <>
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableHead>Name</TableHead>
@@ -81,7 +87,7 @@ export default async function GuestsPage({
                         <div className="text-xs text-slate-400 mt-0.5">{guest.email || ""}</div>
                       </TableCell>
                       <TableCell className="text-sm text-slate-600">
-                        {guest.nationality || "-"}
+                        {(guest as any).nationality || "-"}
                       </TableCell>
                       <TableCell>
                         <Badge variant={
@@ -103,7 +109,10 @@ export default async function GuestsPage({
                   ))}
                 </TableBody>
               </Table>
-            )}
+            </div>
+            <Pagination page={page} totalPages={totalPages} />
+          </>
+        )}
           </Card>
         </div>
     </div>

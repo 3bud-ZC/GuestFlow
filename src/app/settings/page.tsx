@@ -27,7 +27,7 @@ export default async function SettingsPage() {
   }
 
   const property = await db.property.findFirst({
-    include: { propertySettings: true }
+    include: { propertySettings: true, rooms: true }
   });
 
   if (!property) {
@@ -61,32 +61,58 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      <Card>
-        <CardContent className="p-5 sm:p-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${waConfigured ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-              <MessageCircle className="w-5 h-5" />
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+        <Card>
+          <CardHeader title="WhatsApp Integration" />
+          <CardContent className="p-5 sm:p-6">
+            <div className="flex items-center gap-4">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${waConfigured ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">WhatsApp Status</h2>
+                {waConfigured ? (
+                  <div className="flex items-center gap-1.5 mt-1 text-sm text-green-600 font-medium">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Configured & Active
+                  </div>
+                ) : (
+                  <div className="flex flex-col mt-1">
+                    <div className="flex items-center gap-1.5 text-sm text-red-600 font-medium">
+                      <XCircle className="w-4 h-4" />
+                      Not Connected / Paused
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">WhatsApp Integration</h2>
-              {waConfigured ? (
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader title="Airbnb Integration" />
+          <CardContent className="p-5 sm:p-6 flex flex-col justify-between h-full gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-rose-50 text-rose-600">
+                <Globe className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">Airbnb Status</h2>
                 <div className="flex items-center gap-1.5 mt-1 text-sm text-green-600 font-medium">
                   <CheckCircle2 className="w-4 h-4" />
-                  Configured & Active
+                  Active
                 </div>
-              ) : (
-                <div className="flex flex-col mt-1">
-                  <div className="flex items-center gap-1.5 text-sm text-red-600 font-medium">
-                    <XCircle className="w-4 h-4" />
-                    Not Configured
-                  </div>
-                  <p className="text-xs text-slate-500 mt-0.5">Missing required environment variables.</p>
-                </div>
-              )}
+                <p className="text-sm text-slate-500 mt-1">Connected Rooms: {property.rooms?.length || 0} / {property.rooms?.length || 0}</p>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <div>
+              <Button href="/settings" variant="secondary" size="sm">
+                Manage Properties
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <form action={updatePropertySettingsAction.bind(null, property.id)}>
         <div className="space-y-6">

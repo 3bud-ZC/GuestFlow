@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/Table";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Search, Plus, Filter, MoreHorizontal, AlertTriangle } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
 
 export default async function ReservationsPage({
   searchParams,
@@ -17,9 +18,13 @@ export default async function ReservationsPage({
     status?: string;
     idStatus?: string;
     dateFilter?: string;
+    page?: string;
   };
 }) {
-  const reservations = await reservationService.getReservations(searchParams);
+  const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
+  const data = await reservationService.getReservations({ ...searchParams, page });
+  const reservations = data.items || [];
+  const totalPages = data.totalPages || 1;
 
   return (
     <div className="space-y-6">
@@ -94,75 +99,80 @@ export default async function ReservationsPage({
           <EmptyState
             icon={Search}
             title="No reservations found"
-            description="Try adjusting your search or filters."
+            description="Try adjusting your filters or search terms."
           />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableHead>Booking</TableHead>
-              <TableHead>Guest</TableHead>
-              <TableHead>Dates</TableHead>
-              <TableHead>Property & Room</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead><span className="sr-only">Actions</span></TableHead>
-            </TableHeader>
-            <TableBody>
-              {reservations.map((res) => (
-                <TableRow key={res.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Link href={`/reservations/${res.id}`} className="text-sm font-semibold text-slate-900 hover:text-blue-600 transition-colors">
-                        {res.code}
-                      </Link>
-                    </div>
-                    <div className="text-xs text-slate-500">{res.platform}</div>
-                  </TableCell>
-                  <TableCell>
-                    {res.guest ? (
-                      <>
-                        <div className="text-sm font-medium text-slate-900">
-                          <Link href={`/guests/${res.guest.id}`} className="hover:underline">
-                            {res.guest.firstName} {res.guest.lastName}
+          <>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableHead>Booking</TableHead>
+                  <TableHead>Guest</TableHead>
+                  <TableHead>Dates</TableHead>
+                  <TableHead>Property & Room</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead><span className="sr-only">Actions</span></TableHead>
+                </TableHeader>
+                <TableBody>
+                  {reservations.map((res: any) => (
+                    <TableRow key={res.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Link href={`/reservations/${res.id}`} className="text-sm font-semibold text-slate-900 hover:text-blue-600 transition-colors">
+                            {res.code}
                           </Link>
                         </div>
-                        <div className="text-xs text-slate-500 mt-1">{res.numberOfGuests} guest{res.numberOfGuests !== 1 && 's'}</div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-sm font-medium text-red-600 flex items-center gap-1">
-                          <AlertTriangle className="w-4 h-4" /> Guest details required
-                        </div>
-                        <div className="text-xs text-slate-500 mt-1">Imported from Airbnb</div>
-                      </>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm text-slate-600">
-                    <div className="font-medium text-slate-700">{new Date(res.checkInDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                    <div className="text-slate-400">to {new Date(res.checkOutDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-slate-900 font-medium">{res.property.name}</div>
-                    <div className="text-xs text-slate-500 mt-1">{res.room.name}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={
-                      res.status === 'CONFIRMED' ? 'info' :
-                      res.status === 'CHECKED_IN' ? 'success' :
-                      res.status === 'CHECKED_OUT' ? 'neutral' :
-                      'warning'
-                    }>
-                      {res.status.replace(/_/g, ' ')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button href={`/reservations/${res.id}`} variant="ghost" size="sm">
-                      Manage
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                        <div className="text-xs text-slate-500">{res.platform}</div>
+                      </TableCell>
+                      <TableCell>
+                        {res.guest ? (
+                          <>
+                            <div className="text-sm font-medium text-slate-900">
+                              <Link href={`/guests/${res.guest.id}`} className="hover:underline">
+                                {res.guest.firstName} {res.guest.lastName}
+                              </Link>
+                            </div>
+                            <div className="text-xs text-slate-500 mt-1">{res.numberOfGuests} guest{res.numberOfGuests !== 1 && 's'}</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-sm font-medium text-red-600 flex items-center gap-1">
+                              <AlertTriangle className="w-4 h-4" /> Guest details required
+                            </div>
+                            <div className="text-xs text-slate-500 mt-1">Imported from Airbnb</div>
+                          </>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-600">
+                        <div className="font-medium text-slate-700">{new Date(res.checkInDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                        <div className="text-slate-400">to {new Date(res.checkOutDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-slate-900 font-medium">{res.property.name}</div>
+                        <div className="text-xs text-slate-500 mt-1">{res.room.name}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={
+                          res.status === 'CONFIRMED' ? 'info' :
+                          res.status === 'CHECKED_IN' ? 'success' :
+                          res.status === 'CHECKED_OUT' ? 'neutral' :
+                          'warning'
+                        }>
+                          {res.status.replace(/_/g, ' ')}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button href={`/reservations/${res.id}`} variant="ghost" size="sm">
+                          Manage
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <Pagination page={page} totalPages={totalPages} />
+          </>
         )}
       </Card>
     </div>

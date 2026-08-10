@@ -9,11 +9,12 @@ export interface SessionUser {
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./authOptions";
+import { cache } from "react";
 
 /**
  * getCurrentUser retrieves the currently authenticated user.
  */
-export async function getCurrentUser(): Promise<SessionUser | null> {
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<SessionUser | null> {
   const session = await getServerSession(authOptions);
   
   if (!session?.user) {
@@ -25,7 +26,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     email: session.user.email as string,
     role: (session.user as any).role as Role,
   };
-}
+});
 
 /**
  * requireAuthenticatedUser guarantees a valid SessionUser is returned,

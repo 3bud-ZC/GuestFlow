@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export default withAuth(
   function middleware(req) {
     // If the route starts with /admin, require ADMIN role
-    if (req.nextUrl.pathname.startsWith("/admin")) {
+    if (req.nextUrl.pathname.startsWith("/admin") || req.nextUrl.pathname.startsWith("/properties/connect-airbnb")) {
       const role = req.nextauth.token?.role;
       if (role !== "ADMIN") {
         return Response.redirect(new URL("/", req.url));

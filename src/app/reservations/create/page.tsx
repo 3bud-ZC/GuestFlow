@@ -8,7 +8,8 @@ import { BookOpen } from "lucide-react";
 export default async function CreateReservationPage() {
   const properties = await propertyService.getProperties();
   const rooms = await roomService.getAllRooms();
-  const guests = await guestService.getGuests();
+  const guestsData = await guestService.getGuests();
+  const guests = guestsData.items || [];
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto pb-12">

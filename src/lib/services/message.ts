@@ -32,16 +32,46 @@ export const messageService = {
     });
   },
 
-  async getAllMessages(filters?: { status?: string; type?: string }) {
+  async getAllMessages(filters?: { status?: string; type?: string; search?: string; page?: number; pageSize?: number }) {
     const where: any = {};
     if (filters?.status && filters.status !== "ALL") where.status = filters.status;
     if (filters?.type && filters.type !== "ALL") where.type = filters.type;
+    
+    if (filters?.search) {
+      where.OR = [
+        { reservation: { code: { contains: filters.search, mode: "insensitive" } } },
+        { guest: { firstName: { contains: filters.search, mode: "insensitive" } } },
+        { guest: { lastName: { contains: filters.search, mode: "insensitive" } } },
+      ];
+    }
 
-    return db.message.findMany({
-      where,
-      include: { guest: true, reservation: true, template: true },
-      orderBy: { createdAt: 'desc' }
-    });
+    const page = filters?.page || 1;
+    const pageSize = filters?.pageSize || 25;
+    const skip = (page - 1) * pageSize;
+
+    const [items, total] = await Promise.all([
+      db.message.findMany({
+        where,
+        select: {
+          id: true, type: true, status: true, sentTime: true, failedTime: true, createdAt: true,
+          guest: { select: { id: true, firstName: true, lastName: true } },
+          reservation: { select: { id: true, code: true } },
+          template: { select: { id: true, metaTemplateName: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+      }),
+      db.message.count({ where })
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize)
+    };
   },
 
   // --- VARIABLES RESOLUTION ---

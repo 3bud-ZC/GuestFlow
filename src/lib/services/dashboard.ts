@@ -7,54 +7,88 @@ export const dashboardService = {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const whatsappEnabled = process.env.WHATSAPP_ENABLED === 'true';
 
+    // 1. Parallelize counts and limited fetches
     const [
+      checkinsTodayCount,
+      checkoutsTodayCount,
+      missingIdsCount,
+      openTasksCount,
+      failedMessagesCount,
+      scheduledMessagesCount,
       todaysCheckins,
       todaysCheckouts,
-      missingIdsCheckins,
-      openTasks,
+      urgentTasks,
       failedMessages,
-      scheduledMessages
+      missingIdReservations,
+      pendingCheckins,
+      pendingCheckouts
     ] = await Promise.all([
-      // Check-ins today
+      db.reservation.count({ where: { checkInDate: { gte: today, lt: tomorrow } } }),
+      db.reservation.count({ where: { checkOutDate: { gte: today, lt: tomorrow } } }),
+      db.reservation.count({ where: { checkInDate: { gte: today, lt: tomorrow }, guest: { documentStatus: 'PENDING' } } }),
+      db.task.count({ where: { status: { not: 'DONE' } } }),
+      whatsappEnabled ? db.message.count({ where: { status: 'FAILED' } }) : Promise.resolve(0),
+      whatsappEnabled ? db.message.count({ where: { status: 'SCHEDULED' } }) : Promise.resolve(0),
+      
+      // Data for rendering lists (top 5)
       db.reservation.findMany({
         where: { checkInDate: { gte: today, lt: tomorrow } },
-        include: { guest: true, property: true, room: true }
+        include: { guest: { select: { id: true, firstName: true, lastName: true, documentStatus: true } }, room: { select: { name: true } }, property: { select: { name: true } } },
+        orderBy: { checkInDate: 'asc' },
+        take: 5
       }),
-      // Check-outs today
       db.reservation.findMany({
         where: { checkOutDate: { gte: today, lt: tomorrow } },
-        include: { guest: true, property: true, room: true }
+        include: { guest: { select: { id: true, firstName: true, lastName: true, documentStatus: true } }, room: { select: { name: true } }, property: { select: { name: true } } },
+        orderBy: { checkOutDate: 'asc' },
+        take: 5
       }),
-      // Missing IDs for pending check-ins
-      db.reservation.findMany({
-        where: { checkInDate: { gte: today, lt: tomorrow }, guest: { documentStatus: 'PENDING' } },
-        include: { guest: true }
-      }),
-      // Open tasks
+      
+      // Data for Action Required (top 8 max each to cover worst case)
       db.task.findMany({
-        where: { status: { not: 'DONE' } },
-        include: { guest: true, reservation: true }
+        where: { status: { not: 'DONE' }, priority: { in: ['URGENT', 'HIGH'] } },
+        select: { id: true, priority: true, title: true, reservationId: true },
+        orderBy: { createdAt: 'desc' },
+        take: 8
       }),
-      // Failed messages
-      db.message.findMany({
+      whatsappEnabled ? db.message.findMany({
         where: { status: 'FAILED' },
-        include: { guest: true, reservation: true }
+        include: { guest: { select: { firstName: true } } },
+        orderBy: { failedTime: 'desc' },
+        take: 8
+      }) : Promise.resolve([]),
+      db.reservation.findMany({
+        where: { 
+          checkInDate: { gte: today, lt: tomorrow },
+          OR: [
+            { guest: { documentStatus: 'PENDING' } },
+            { guest: null, platform: 'AIRBNB' }
+          ]
+        },
+        include: { guest: { select: { id: true, firstName: true, lastName: true, documentStatus: true } } },
+        take: 8
       }),
-      // Scheduled messages
-      db.message.count({
-        where: { status: 'SCHEDULED' }
+      db.reservation.findMany({
+        where: { checkInDate: { gte: today, lt: tomorrow }, status: 'CONFIRMED' },
+        include: { guest: { select: { firstName: true } }, room: { select: { name: true } } },
+        take: 8
+      }),
+      db.reservation.findMany({
+        where: { checkOutDate: { gte: today, lt: tomorrow }, status: 'CHECKED_IN' },
+        include: { guest: { select: { firstName: true } }, room: { select: { name: true } } },
+        take: 8
       })
     ]);
 
     // Build Action Required List
     const actionRequired: { type: string; message: string; link: string; urgency: string }[] = [];
 
-    // 1. Missing IDs for check-ins today
-    todaysCheckins.forEach(res => {
+    missingIdReservations.forEach((res: any) => {
       if (res.guest && res.guest.documentStatus === 'PENDING') {
-        // Deduplicate: avoid if a task already exists for this reservation regarding missing ID/phone
-        const hasTask = openTasks.some(t => t.reservationId === res.id);
+        const hasTask = urgentTasks.some((t: any) => t.reservationId === res.id);
         if (!hasTask) {
           actionRequired.push({
             type: 'MISSING_ID',
@@ -64,8 +98,7 @@ export const dashboardService = {
           });
         }
       } else if (!res.guest && res.platform === 'AIRBNB') {
-        // Airbnb reservation missing guest details entirely
-        const hasTask = openTasks.some(t => t.reservationId === res.id);
+        const hasTask = urgentTasks.some((t: any) => t.reservationId === res.id);
         if (!hasTask) {
           actionRequired.push({
             type: 'MISSING_GUEST',
@@ -77,68 +110,57 @@ export const dashboardService = {
       }
     });
 
-    // 2. High/Urgent Open Tasks
-    openTasks.forEach(task => {
-      if (task.priority === 'URGENT' || task.priority === 'HIGH') {
-        actionRequired.push({
-          type: 'TASK',
-          message: `[${task.priority}] ${task.title}`,
-          link: `/tasks/${task.id}`,
-          urgency: task.priority
-        });
-      }
+    urgentTasks.forEach((task: any) => {
+      actionRequired.push({
+        type: 'TASK',
+        message: `[${task.priority}] ${task.title}`,
+        link: `/tasks/${task.id}`,
+        urgency: task.priority
+      });
     });
 
-    // 3. Failed Messages
-    failedMessages.forEach(msg => {
+    failedMessages.forEach((msg: any) => {
       actionRequired.push({
         type: 'FAILED_MESSAGE',
-        message: `WhatsApp delivery failed for ${msg.guest.firstName} (${msg.type})`,
+        message: `WhatsApp delivery failed for ${msg.guest?.firstName || 'Guest'} (${msg.type})`,
         link: `/reservations/${msg.reservationId}`,
         urgency: 'HIGH'
       });
     });
 
-    // 4. Pending Check-ins (after 2 PM or generic)
-    todaysCheckins.forEach(res => {
-      if (res.status === 'CONFIRMED') {
-        const name = res.guest ? res.guest.firstName : 'Unknown Guest';
-        actionRequired.push({
-          type: 'CHECK_IN_PENDING',
-          message: `${name} check-in pending for ${res.room.name}`,
-          link: `/reservations/${res.id}`,
-          urgency: 'MEDIUM'
-        });
-      }
+    pendingCheckins.forEach((res: any) => {
+      const name = res.guest ? res.guest.firstName : 'Unknown Guest';
+      actionRequired.push({
+        type: 'CHECK_IN_PENDING',
+        message: `${name} check-in pending for ${res.room.name}`,
+        link: `/reservations/${res.id}`,
+        urgency: 'MEDIUM'
+      });
     });
 
-    // 5. Pending Check-outs
-    todaysCheckouts.forEach(res => {
-      if (res.status === 'CHECKED_IN') {
-        const name = res.guest ? res.guest.firstName : 'Unknown Guest';
-        actionRequired.push({
-          type: 'CHECK_OUT_PENDING',
-          message: `${name} check-out pending for ${res.room.name}`,
-          link: `/reservations/${res.id}`,
-          urgency: 'MEDIUM'
-        });
-      }
+    pendingCheckouts.forEach((res: any) => {
+      const name = res.guest ? res.guest.firstName : 'Unknown Guest';
+      actionRequired.push({
+        type: 'CHECK_OUT_PENDING',
+        message: `${name} check-out pending for ${res.room.name}`,
+        link: `/reservations/${res.id}`,
+        urgency: 'MEDIUM'
+      });
     });
 
-    // Sort by Urgency: URGENT > HIGH > MEDIUM
     const urgencyWeight: Record<string, number> = { URGENT: 3, HIGH: 2, MEDIUM: 1 };
     actionRequired.sort((a, b) => urgencyWeight[b.urgency] - urgencyWeight[a.urgency]);
 
     return {
       metrics: {
-        checkinsToday: todaysCheckins.length,
-        checkoutsToday: todaysCheckouts.length,
-        missingIds: missingIdsCheckins.length,
-        openTasks: openTasks.length,
-        failedMessages: failedMessages.length,
-        scheduledMessages
+        checkinsToday: checkinsTodayCount,
+        checkoutsToday: checkoutsTodayCount,
+        missingIds: missingIdsCount,
+        openTasks: openTasksCount,
+        failedMessages: failedMessagesCount,
+        scheduledMessages: scheduledMessagesCount
       },
-      actionRequired,
+      actionRequired: actionRequired.slice(0, 8),
       todaysCheckins,
       todaysCheckouts,
     };

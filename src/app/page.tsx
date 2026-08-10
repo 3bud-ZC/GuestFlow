@@ -21,7 +21,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
   const data = await dashboardService.getDashboardData();
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
@@ -33,9 +32,8 @@ export default async function DashboardPage() {
             <Calendar className="w-4 h-4" />
             <span className="text-sm font-medium">{today}</span>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Guest Operations</h1>
           <p className="mt-1 text-slate-500">
-            Welcome back. Here's what needs attention today.
+            Here's what needs attention today.
           </p>
         </div>
         <Button href="/reservations/create" variant="primary">
@@ -70,19 +68,38 @@ export default async function DashboardPage() {
           icon={<CheckSquare className="w-5 h-5 text-slate-600" />}
           trend="Requires action"
         />
-        <MetricCard 
-          title="Failed Messages" 
-          value={data.metrics.failedMessages} 
-          icon={<MessageSquareWarning className="w-5 h-5 text-red-600" />}
-          trend="Delivery errors"
-          urgent={data.metrics.failedMessages > 0}
-        />
-        <MetricCard 
-          title="Scheduled Msgs" 
-          value={data.metrics.scheduledMessages} 
-          icon={<Clock className="w-5 h-5 text-indigo-600" />}
-          trend="Automated queue"
-        />
+        {(data as any).whatsappEnabled ? (
+          <>
+            <MetricCard 
+              title="Failed Messages" 
+              value={data.metrics.failedMessages} 
+              icon={<MessageSquareWarning className="w-5 h-5 text-red-600" />}
+              trend="Delivery errors"
+              urgent={data.metrics.failedMessages > 0}
+            />
+            <MetricCard 
+              title="Scheduled Msgs" 
+              value={data.metrics.scheduledMessages} 
+              icon={<Clock className="w-5 h-5 text-indigo-600" />}
+              trend="Automated queue"
+            />
+          </>
+        ) : (
+          <>
+            <MetricCard 
+              title="Failed Messages" 
+              value="-" 
+              icon={<MessageSquareWarning className="w-5 h-5 text-slate-400" />}
+              trend="WhatsApp disabled"
+            />
+            <MetricCard 
+              title="Scheduled Msgs" 
+              value="-" 
+              icon={<Clock className="w-5 h-5 text-slate-400" />}
+              trend="WhatsApp disabled"
+            />
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -109,23 +126,30 @@ export default async function DashboardPage() {
                   />
                 </div>
               ) : (
-                data.actionRequired.map((action, idx) => (
-                  <Link key={idx} href={action.link} className="block p-4 hover:bg-slate-50 transition-colors group">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`w-2 h-2 rounded-full shrink-0 ${
-                            action.urgency === 'URGENT' || action.urgency === 'HIGH' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-amber-500'
-                          }`} />
-                          <span className="text-sm font-medium text-slate-900 line-clamp-2 leading-snug">
-                            {action.message}
-                          </span>
+                <>
+                  {data.actionRequired.slice(0, 8).map((action: any, idx: number) => (
+                    <Link key={idx} href={action.link} className="block p-4 hover:bg-slate-50 transition-colors group">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${
+                              action.urgency === 'URGENT' || action.urgency === 'HIGH' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-amber-500'
+                            }`} />
+                            <span className="text-sm font-medium text-slate-900 line-clamp-2 leading-snug">
+                              {action.message}
+                            </span>
+                          </div>
                         </div>
+                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 shrink-0 mt-0.5 transition-colors" />
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 shrink-0 mt-0.5 transition-colors" />
-                    </div>
-                  </Link>
-                ))
+                    </Link>
+                  ))}
+                  {data.actionRequired.length > 8 && (
+                    <Link href="/tasks" className="block p-4 text-center text-sm font-medium text-blue-600 hover:bg-slate-50 transition-colors">
+                      View all tasks ({data.actionRequired.length})
+                    </Link>
+                  )}
+                </>
               )}
             </div>
           </Card>
@@ -154,7 +178,7 @@ export default async function DashboardPage() {
                   <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableHeader>
                 <TableBody>
-                  {data.todaysCheckins.map(res => (
+                  {data.todaysCheckins.slice(0, 5).map((res: any) => (
                     <TableRow key={res.id}>
                       <TableCell>
                         {res.guest ? (
@@ -219,7 +243,7 @@ export default async function DashboardPage() {
                   <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableHeader>
                 <TableBody>
-                  {data.todaysCheckouts.map(res => (
+                  {data.todaysCheckouts.slice(0, 5).map((res: any) => (
                     <TableRow key={res.id}>
                       <TableCell>
                         {res.guest ? (

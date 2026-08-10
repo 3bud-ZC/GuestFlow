@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AddPropertyDrawer } from "./AddPropertyDrawer";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Building2, MapPin, ChevronRight, Plus } from "lucide-react";
+import { Building2, MapPin, ChevronRight, Plus, Link2, Settings } from "lucide-react";
 
 export default async function PropertiesPage() {
   const properties = await propertyService.getProperties();
@@ -47,11 +47,27 @@ export default async function PropertiesPage() {
                           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
                             {property._count.rooms} room{property._count.rooms !== 1 && 's'}
                           </span>
+                          {(property as any).rooms && (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
+                              {(property as any).rooms.filter((r: any) => r.airbnbIcalUrl).length} Airbnb Connected
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
-                    <div className="shrink-0 pt-2">
-                      <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                    <div className="shrink-0 pt-2 flex flex-col items-end gap-2">
+                      <div className="flex gap-2">
+                        {isAdmin && (
+                          <Link href="/properties/connect-airbnb" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors" onClick={(e) => e.stopPropagation()}>
+                            <Link2 className="w-4 h-4" />
+                            Connect Airbnb
+                          </Link>
+                        )}
+                        <Link href={`/properties/${property.id}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors" onClick={(e) => e.stopPropagation()}>
+                          <Settings className="w-4 h-4" />
+                          Manage
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </Link>

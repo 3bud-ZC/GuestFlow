@@ -61,6 +61,15 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
                 ))
               )}
             </div>
+            {isAdmin && property.rooms.length > 0 && (
+              <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                 <Link href="/properties/connect-airbnb">
+                    <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                      Go to Airbnb Wizard
+                    </Button>
+                 </Link>
+              </div>
+            )}
           </Card>
         </div>
     </div>

@@ -8,13 +8,17 @@ import { Button } from "@/components/ui/Button";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/Table";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CheckSquare, Filter, AlertCircle } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
 
 export default async function TasksPage({
   searchParams,
 }: {
-  searchParams: { status?: string; priority?: string };
+  searchParams: { status?: string; priority?: string; page?: string };
 }) {
-  const tasks = await taskService.getTasks(searchParams);
+  const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
+  const data = await taskService.getTasks({ ...searchParams, page });
+  const tasks = data.items || [];
+  const totalPages = data.totalPages || 1;
 
   return (
     <div className="space-y-6">
@@ -53,8 +57,10 @@ export default async function TasksPage({
                 icon={CheckSquare}
                 title="No tasks found"
                 description="Try adjusting your filters or create a new task."
-              />
-            ) : (
+          />
+        ) : (
+          <>
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableHead>Title</TableHead>
@@ -111,7 +117,10 @@ export default async function TasksPage({
                   ))}
                 </TableBody>
               </Table>
-            )}
+            </div>
+            <Pagination page={page} totalPages={totalPages} />
+          </>
+        )}
           </Card>
         </div>
     </div>

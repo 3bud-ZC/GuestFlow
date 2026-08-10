@@ -5,25 +5,23 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Search, Filter, Settings, MessageSquare } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
 
 export default async function MessagesPage({
   searchParams,
 }: {
-  searchParams: { status?: string; type?: string; q?: string };
+  searchParams: { status?: string; type?: string; q?: string; page?: string };
 }) {
-  let messages = await messageService.getAllMessages({
-    status: searchParams.status,
-    type: searchParams.type
+  const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
+  const data = await messageService.getAllMessages({
+    ...searchParams,
+    page
   });
+  
+  // Note: search filtering by guest name/code is now handled in messageService.getAllMessages
 
-  if (searchParams.q) {
-    const q = searchParams.q.toLowerCase();
-    messages = messages.filter(m => 
-      m.reservation.code.toLowerCase().includes(q) ||
-      m.guest.firstName.toLowerCase().includes(q) ||
-      m.guest.lastName.toLowerCase().includes(q)
-    );
-  }
+  const messages = data.items || [];
+  const totalPages = data.totalPages || 1;
 
   return (
     <div className="space-y-6">
@@ -139,10 +137,10 @@ export default async function MessagesPage({
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 max-w-xs truncate">
-                      {msg.providerMessageId ? (
-                        <span className="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-600">{msg.providerMessageId}</span>
+                      {(msg as any).providerMessageId ? (
+                        <span className="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-600">{(msg as any).providerMessageId}</span>
                       ) : (
-                        <span className="text-xs text-red-600 font-medium">{msg.errorInfo || "-"}</span>
+                        <span className="text-xs text-red-600 font-medium">{(msg as any).errorInfo || "-"}</span>
                       )}
                     </td>
                   </tr>
@@ -151,6 +149,7 @@ export default async function MessagesPage({
             </tbody>
           </table>
         </div>
+        <Pagination page={page} totalPages={totalPages} />
       </Card>
     </div>
   );
