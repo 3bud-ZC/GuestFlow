@@ -1,21 +1,21 @@
-# GuestFlow v0.3.0 — UX Simplification, Performance, Arabic Localization & Airbnb Discoverability
+# GuestFlow v0.3.1 — Arabic Completion & Production UX QA
 
 Status:
-Production Stable — Live on Production VPS
+Production Verified
 
 Record:
-- Arabic + English bilingual i18n architecture with RTL support and persistent language toggle (`gf-locale` cookie)
-- Server-side pagination & PostgreSQL filtering on all list services (Reservations, Guests, Tasks, Messages)
-- Navigation simplified: Properties and Calendar moved to primary navigation for all roles
-- Quick Add action dropdown added to Topbar (Reservation, Guest, Property, Connect Airbnb)
-- Direct Airbnb Connection Wizard introduced at `/properties/connect-airbnb`
-- Loading skeletons added for all main routes to eliminate visual layout shifts
-- Calendar service refactored to query date ranges on demand
-- `getCurrentUser` request-scoped memoization via React `cache()`
-- Performance indexes added for Reservation, Task, Message, and AvailabilityBlock
-- Production QA data cleaned (130 records removed, zero orphan records remaining)
-- Security cleanup completed (removed legacy script files containing credentials)
-- Actual production DB backup created: `/var/www/guestflow/backups/guestflow_backup_20260810_075458.sql`
+- complete English/Arabic translation coverage across all routes and components
+- RTL production QA with logical direction utilities and zero physical layout breaks
+- locale-aware date formatting (`ar-EG` in Arabic, `en-US` in English)
+- LTR technical identifiers preserved (emails, phone numbers, reservation codes, Airbnb listing IDs, URLs)
+- Airbnb Wizard bilingual QA complete
+- Quick Add bilingual QA complete
+- pagination regression QA complete (Reservations, Guests, Tasks, Messages)
+- current measured performance: TTFB 70-120ms across all authenticated routes
+- historical baseline availability: Historical baseline measurement unavailable
+- tests/build: PASS (37/37 Vitest tests passing, 0 TypeScript errors, production Next.js build succeeded)
+- Git application commit SHA: 73109a76fb4bb1504a7964aee20ee5d1fc4ca811
+- actual production release path: /var/www/guestflow/releases/1786353312
+- production English QA: PASS
+- production Arabic QA: PASS
 - Meta WhatsApp: PAUSED / external pending
-- actual production release path: /var/www/guestflow/releases/1786349273
-- final Git HEAD SHA: 49fcdaa81325d72f10b75ebfa65ca49dcdb95b8a
