@@ -125,25 +125,25 @@ export default async function DashboardPage() {
                     let messageText = '';
                     switch (action.type) {
                       case 'MISSING_ID':
-                        messageText = (t.dashboard as any).missingIdForGuest?.replace('{guest}', action.guestName || '') || `${action.guestName} checking in today is missing ID`;
+                        messageText = (t.dashboard as any).missingIdForGuest?.replace('{guest}', action.guestName || '') || '';
                         break;
                       case 'MISSING_GUEST':
-                        messageText = (t.dashboard as any).missingGuestDetails?.replace('{code}', action.reservationCode || '') || `Airbnb check-in today (${action.reservationCode}) requires guest details`;
+                        messageText = (t.dashboard as any).missingGuestDetails?.replace('{code}', action.reservationCode || '') || '';
                         break;
                       case 'OPEN_TASK':
-                        messageText = (t.dashboard as any).openTaskPriority?.replace('{priority}', t.tasks[action.urgency as keyof typeof t.tasks] || action.urgency).replace('{title}', action.taskTitle || '') || `[${action.urgency}] ${action.taskTitle}`;
+                        messageText = (t.dashboard as any).openTaskPriority?.replace('{priority}', t.tasks[action.urgency as keyof typeof t.tasks] || action.urgency).replace('{title}', action.taskTitle || '') || '';
                         break;
                       case 'FAILED_MESSAGE':
-                        messageText = (t.dashboard as any).failedMessageForGuest?.replace('{guest}', action.guestName || '') || `WhatsApp delivery failed for ${action.guestName}`;
+                        messageText = (t.dashboard as any).failedMessageForGuest?.replace('{guest}', action.guestName || '') || '';
                         break;
                       case 'CHECKIN_TODAY':
-                        messageText = (t.dashboard as any).checkinPendingFor?.replace('{guest}', action.guestName || '') || `${action.guestName} check-in pending`;
+                        messageText = (t.dashboard as any).checkinPendingFor?.replace('{guest}', action.guestName || '') || '';
                         break;
                       case 'CHECKOUT_TODAY':
-                        messageText = (t.dashboard as any).checkoutPendingFor?.replace('{guest}', action.guestName || '') || `${action.guestName} check-out pending`;
+                        messageText = (t.dashboard as any).checkoutPendingFor?.replace('{guest}', action.guestName || '') || '';
                         break;
                       default:
-                        messageText = 'Action required';
+                        messageText = t.dashboard.requiresAction;
                     }
 
                     return (
@@ -208,7 +208,7 @@ export default async function DashboardPage() {
                         ) : (
                           <>
                             <div className="font-medium text-red-600 flex items-center gap-1">
-                              <AlertCircle className="w-3 h-3" /> Guest details required
+                              <AlertCircle className="w-3 h-3" /> {t.dashboard.guestDetailsRequired}
                             </div>
                             <div className="text-xs text-slate-500 mt-0.5">{res.code} · {res.platform}</div>
                           </>
@@ -226,7 +226,7 @@ export default async function DashboardPage() {
                             {t.guests[res.guest.documentStatus as keyof typeof t.guests] || res.guest.documentStatus}
                           </Badge>
                         ) : (
-                          <Badge variant="warning">MISSING</Badge>
+                          <Badge variant="warning">{t.dashboard.missing}</Badge>
                         )}
                       </TableCell>
                       <TableCell className={isRtl ? 'text-left' : 'text-right'}>
@@ -272,7 +272,7 @@ export default async function DashboardPage() {
                         ) : (
                           <>
                             <div className="font-medium text-red-600 flex items-center gap-1">
-                              <AlertCircle className="w-3 h-3" /> Guest details required
+                              <AlertCircle className="w-3 h-3" /> {t.dashboard.guestDetailsRequired}
                             </div>
                             <div className="text-xs text-slate-500 mt-0.5">{res.code}</div>
                           </>

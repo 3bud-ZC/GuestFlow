@@ -76,7 +76,7 @@ export default async function CalendarPage({
               <ChevronLeft className={`w-5 h-5 text-slate-600 ${isRtl ? 'rotate-180' : ''}`} />
             </Link>
             <Link href={`/calendar`} className="px-4 py-2 text-sm font-medium hover:bg-slate-50">
-              {t.common.today || 'Today'}
+              {t.common.today}
             </Link>
             <Link href={createNavUrl(nextMonth)} className="p-2 hover:bg-slate-50 ltr:border-l rtl:border-r border-slate-200">
               <ChevronRight className={`w-5 h-5 text-slate-600 ${isRtl ? 'rotate-180' : ''}`} />
@@ -92,7 +92,7 @@ export default async function CalendarPage({
             defaultValue={propertyId || ""} 
             className="block w-full py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm bg-white"
           >
-            <option value="">{t.properties.allProperties || 'All Properties'}</option>
+            <option value="">{t.properties.allProperties}</option>
             {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           {propertyId && rooms.length > 0 && (
@@ -101,7 +101,7 @@ export default async function CalendarPage({
               defaultValue={roomId || ""}
               className="block w-full py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm bg-white"
             >
-              <option value="">{t.properties.allRooms || 'All Rooms'}</option>
+              <option value="">{t.properties.allRooms}</option>
               {rooms.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
           )}
@@ -142,8 +142,8 @@ export default async function CalendarPage({
                     );
                   })}
                   {dayBlocks.map((b: any) => (
-                    <div key={b.id} className="text-xs px-2 py-1 rounded border bg-slate-100 text-slate-800 border-slate-200 truncate" title={`${t.reservations.room} ${b.roomId}: Blocked`}>
-                      {t.reservations.room} {b.roomId}: Blocked
+                    <div key={b.id} className="text-xs px-2 py-1 rounded border bg-slate-100 text-slate-800 border-slate-200 truncate" title={`${t.reservations.room} ${b.roomId}: ${t.calendar.blocked}`}>
+                      {t.reservations.room} {b.roomId}: {t.calendar.blocked}
                     </div>
                   ))}
                 </div>

@@ -83,6 +83,8 @@ export const en = {
     deliveryErrors: 'Delivery errors',
     automatedQueue: 'Automated queue',
     whatsappDisabled: 'WhatsApp disabled',
+    guestDetailsRequired: 'Guest details required',
+    missing: 'MISSING',
   },
   calendar: {
     calendar: 'Calendar',
@@ -96,7 +98,7 @@ export const en = {
     roomFilter: 'Room Filter',
     events: 'events',
     reservations: 'reservations',
-    blocked: 'blocked',
+    blocked: 'Blocked',
   },
   reservations: {
     reservation: 'Reservation',

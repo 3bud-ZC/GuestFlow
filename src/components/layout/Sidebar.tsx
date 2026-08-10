@@ -159,7 +159,7 @@ export function Sidebar({ user }: { user: any }) {
       <button
         onClick={() => setIsOpen(true)}
         className="xl:hidden fixed top-3.5 ltr:left-4 rtl:right-4 z-40 p-2 rounded-lg bg-white border border-slate-200 shadow-sm text-slate-600 hover:bg-slate-50 transition-colors"
-        aria-label="Open menu"
+        aria-label={t.navigation.openMenu}
       >
         <Menu className="w-5 h-5" />
       </button>

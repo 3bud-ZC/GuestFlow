@@ -106,16 +106,25 @@ test.describe('Production E2E Tests', () => {
           expect(bodyText).toContain(title);
         }
 
-        // Assert NO un-translated system English navigation titles
-        for (const title of englishTitles) {
-          // We must be careful as some text might be matched partially, but sidebar links should not contain English
-          // Let's use a regex or specific check if possible, or just check bodyText
-          // The requirement: "Assert NO un-translated system English navigation titles"
-          // We will check that none of the English titles exist as standalone navigation items,
-          // but checking body text might fail if some other part of the page contains "Dashboard".
-          // Let's check specifically inside the sidebar if possible, but fallback to body.
-          // For now, assuming they should not be visible on the page at all if translated.
-          expect(bodyText).not.toMatch(new RegExp(`\\b${title}\\b`));
+        // Assert NO un-translated system English navigation titles or fallback strings
+        const forbiddenEnglishStrings = [
+          'Dashboard',
+          'Calendar',
+          'Reservations',
+          'Guests',
+          'Properties',
+          'Tasks',
+          'Messages',
+          'Settings',
+          'Guest details required',
+          'MISSING',
+          'Blocked',
+          'Action required',
+          'Sign out'
+        ];
+
+        for (const str of forbiddenEnglishStrings) {
+          expect(bodyText).not.toMatch(new RegExp(`\\b${str}\\b`));
         }
       });
     }
