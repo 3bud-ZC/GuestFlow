@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 export function Table({ children, className = "" }: { children: ReactNode, className?: string }) {
   return (
     <div className={`overflow-x-auto ${className}`}>
-      <table className="w-full text-sm text-left whitespace-nowrap">
+      <table className="w-full text-sm ltr:text-left rtl:text-right whitespace-nowrap">
         {children}
       </table>
     </div>

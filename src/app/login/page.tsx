@@ -1,8 +1,15 @@
 import { LoginForm } from "./LoginForm";
 import { BookOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
+import { cookies } from "next/headers";
+import { getDictionary } from "@/lib/i18n";
+import { Locale } from "@/lib/i18n/types";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const cookieStore = await cookies();
+  const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
+  const t = getDictionary(locale);
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md space-y-6">
@@ -11,9 +18,9 @@ export default function LoginPage() {
             <BookOpen className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-            GuestFlow
+            {t.common.welcomeTo || 'Welcome to'} GuestFlow
           </h2>
-          <p className="text-sm text-slate-500">Sign in to your account</p>
+          <p className="text-sm text-slate-500">{t.common.signInToAccount || 'Sign in to your account'}</p>
         </div>
         
         <Card className="shadow-lg border-slate-200/60">

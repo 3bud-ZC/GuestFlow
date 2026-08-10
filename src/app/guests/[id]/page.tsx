@@ -6,17 +6,25 @@ import { IDStatusForm } from "./IDStatusForm";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ArrowLeft, UserCircle2, Mail, Phone, Globe2, Languages, CalendarDays, MapPin } from "lucide-react";
+import { cookies } from "next/headers";
+import { getDictionary } from "@/lib/i18n";
+import { Locale } from "@/lib/i18n/types";
 
 export default async function GuestDetailsPage({ params }: { params: { id: string } }) {
   const guest = await guestService.getGuestById(params.id);
   if (!guest) notFound();
+  
+  const cookieStore = await cookies();
+  const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
+  const t = getDictionary(locale);
+  const isRtl = locale === 'ar';
 
   return (
     <div className="space-y-6">
       <div>
         <Link href="/guests" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors mb-4">
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Back to Guests
+          <ArrowLeft className={`w-4 h-4 ${isRtl ? 'ml-1 rtl:rotate-180' : 'mr-1'}`} />
+          {t.common.previous}
         </Link>
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
@@ -41,28 +49,28 @@ export default async function GuestDetailsPage({ params }: { params: { id: strin
                 <div className="p-4 sm:p-5 flex items-start gap-3">
                   <Mail className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                   <div>
-                    <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Email</div>
+                    <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t.guests.email}</div>
                     <div className="mt-0.5 text-sm text-slate-900 break-all">{guest.email || "—"}</div>
                   </div>
                 </div>
                 <div className="p-4 sm:p-5 flex items-start gap-3">
                   <Phone className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                   <div>
-                    <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Phone</div>
-                    <div className="mt-0.5 text-sm text-slate-900">{guest.phone || "—"}</div>
+                    <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t.guests.phone}</div>
+                    <div className="mt-0.5 text-sm text-slate-900" dir="ltr">{guest.phone || "—"}</div>
                   </div>
                 </div>
                 <div className="p-4 sm:p-5 flex items-start gap-3">
                   <Globe2 className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                   <div>
-                    <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Nationality</div>
+                    <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t.guests.nationality}</div>
                     <div className="mt-0.5 text-sm text-slate-900">{guest.nationality || "—"}</div>
                   </div>
                 </div>
                 <div className="p-4 sm:p-5 flex items-start gap-3">
                   <Languages className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                   <div>
-                    <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Language</div>
+                    <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t.guests.preferredLanguage}</div>
                     <div className="mt-0.5 text-sm text-slate-900">{guest.preferredLanguage || "—"}</div>
                   </div>
                 </div>
@@ -105,9 +113,9 @@ export default async function GuestDetailsPage({ params }: { params: { id: strin
                         <div className="flex items-center gap-1.5 mt-2 text-sm text-slate-600">
                           <CalendarDays className="w-4 h-4 text-slate-400 shrink-0" />
                           <span>
-                            {new Date(res.checkInDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            {new Date(res.checkInDate).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             {" - "}
-                            {new Date(res.checkOutDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            {new Date(res.checkOutDate).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </span>
                         </div>
                         
@@ -126,7 +134,7 @@ export default async function GuestDetailsPage({ params }: { params: { id: strin
                         res.status === 'CANCELLED' ? 'danger' :
                         'warning'
                       }>
-                        {res.status.replace(/_/g, ' ')}
+                        {t.reservations[res.status as keyof typeof t.reservations] || res.status}
                       </Badge>
                     </div>
                   </div>

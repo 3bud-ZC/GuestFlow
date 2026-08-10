@@ -12,7 +12,7 @@ export async function Header() {
       </Link>
       {user && (
         <>
-          <nav className="ml-10 flex gap-6 text-sm font-medium text-gray-600">
+          <nav className="ltr:ml-10 rtl:mr-10 flex gap-6 text-sm font-medium text-gray-600">
             <Link href="/" className="hover:text-blue-600 cursor-pointer">
               Dashboard
             </Link>
@@ -42,8 +42,8 @@ export async function Header() {
               </>
             )}
           </nav>
-          <div className="ml-auto text-sm text-gray-500 flex items-center gap-4">
-            <div className="flex flex-col text-right">
+          <div className="ltr:ml-auto rtl:mr-auto text-sm text-gray-500 flex items-center gap-4">
+            <div className="flex flex-col ltr:text-right rtl:text-left">
               <span className="font-medium text-gray-900">{user.email}</span>
               <span className="text-xs">{user.role}</span>
             </div>

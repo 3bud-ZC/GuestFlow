@@ -10,6 +10,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ArrowLeft, BookOpen, User, Users, Building, DoorClosed, CalendarDays, Activity, MessageSquare, ExternalLink, CheckSquare } from "lucide-react";
+import { cookies } from "next/headers";
+import { getDictionary } from "@/lib/i18n";
+import { Locale } from "@/lib/i18n/types";
 
 export default async function ReservationDetailsPage({ params }: { params: { id: string } }) {
   const reservation = await reservationService.getReservationById(params.id);
@@ -21,19 +24,24 @@ export default async function ReservationDetailsPage({ params }: { params: { id:
     orderBy: { createdAt: 'desc' }
   });
 
+  const cookieStore = await cookies();
+  const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
+  const t = getDictionary(locale);
+  const isRtl = locale === 'ar';
+
   return (
     <div className="space-y-6 pb-12">
       <div>
         <Link href="/reservations" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors mb-4">
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Back to Reservations
+          <ArrowLeft className={`w-4 h-4 ${isRtl ? 'ml-1 rtl:rotate-180' : 'mr-1'}`} />
+          {t.common.previous}
         </Link>
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Reservation: {reservation.code}</h1>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t.reservations.reservation}: {reservation.code}</h1>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
               <Badge variant="neutral" className="text-xs font-medium">via {reservation.platform}</Badge>
             </p>
@@ -51,7 +59,7 @@ export default async function ReservationDetailsPage({ params }: { params: { id:
                   <div className="flex items-start gap-3">
                     <User className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                     <div>
-                      <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Guest</div>
+                      <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t.reservations.guest}</div>
                       {reservation.guest ? (
                         <Link href={`/guests/${reservation.guest.id}`} className="mt-0.5 block text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline">
                           {reservation.guest.firstName} {reservation.guest.lastName}
@@ -77,7 +85,7 @@ export default async function ReservationDetailsPage({ params }: { params: { id:
                   <div className="flex items-start gap-3">
                     <Building className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                     <div>
-                      <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Property</div>
+                      <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t.reservations.property}</div>
                       <div className="mt-0.5 text-sm text-slate-900">{reservation.property.name}</div>
                     </div>
                   </div>
@@ -85,7 +93,7 @@ export default async function ReservationDetailsPage({ params }: { params: { id:
                   <div className="flex items-start gap-3">
                     <DoorClosed className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                     <div>
-                      <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Room</div>
+                      <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">{t.reservations.room}</div>
                       <div className="mt-0.5 text-sm text-slate-900">{reservation.room.name}</div>
                     </div>
                   </div>
@@ -98,7 +106,7 @@ export default async function ReservationDetailsPage({ params }: { params: { id:
                   <div>
                     <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Check-in</div>
                     <div className="mt-0.5 text-sm font-medium text-slate-900">
-                      {new Date(reservation.checkInDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                      {new Date(reservation.checkInDate).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
                   </div>
                 </div>
@@ -110,7 +118,7 @@ export default async function ReservationDetailsPage({ params }: { params: { id:
                   <div>
                     <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Check-out</div>
                     <div className="mt-0.5 text-sm font-medium text-slate-900">
-                      {new Date(reservation.checkOutDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                      {new Date(reservation.checkOutDate).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
                   </div>
                 </div>
@@ -140,7 +148,7 @@ export default async function ReservationDetailsPage({ params }: { params: { id:
                       </div>
                     </div>
                     <Button href={`/tasks/${task.id}`} variant="outline" size="sm" className="shrink-0">
-                      View Task
+                      {t.common.viewAll}
                     </Button>
                   </div>
                 ))}
@@ -171,7 +179,7 @@ export default async function ReservationDetailsPage({ params }: { params: { id:
                         <div>
                           <p className="text-sm font-medium text-slate-900">{log.action}</p>
                           <p className="text-xs text-slate-500 mt-0.5">
-                            {new Date(log.timestamp).toLocaleString('en-US', {
+                            {new Date(log.timestamp).toLocaleString(locale === 'ar' ? 'ar-EG' : 'en-US', {
                               month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
                             })}
                           </p>
@@ -227,7 +235,7 @@ export default async function ReservationDetailsPage({ params }: { params: { id:
                       reservation.guest.documentStatus === 'PENDING' ? 'warning' :
                       'neutral'
                     }>
-                      {reservation.guest.documentStatus}
+                      {t.guests[reservation.guest.documentStatus as keyof typeof t.guests] || reservation.guest.documentStatus}
                     </Badge>
                     <Link href={`/guests/${reservation.guest.id}`} className="text-sm text-blue-600 hover:text-blue-700 hover:underline inline-flex items-center gap-1">
                       Update <ExternalLink className="w-3 h-3" />

@@ -54,14 +54,14 @@ const NavLink = ({ href, label, icon: Icon, pathname, setIsOpen }: { href: strin
       />
       <span className="truncate">{label}</span>
       {isActive && (
-        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />
+        <span className="ltr:ml-auto rtl:mr-auto w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />
       )}
     </Link>
   );
 };
 
 const SidebarContent = ({ user, pathname, setIsOpen }: { user: any, pathname: string, setIsOpen: (val: boolean) => void }) => (
-  <aside className="flex flex-col h-full w-64 bg-white border-r border-slate-200">
+  <aside className="flex flex-col h-full w-64 bg-white ltr:border-r rtl:border-l border-slate-200">
     {/* Header */}
     <div className="h-16 flex items-center px-5 border-b border-slate-100 shrink-0">
       <Link
@@ -77,7 +77,7 @@ const SidebarContent = ({ user, pathname, setIsOpen }: { user: any, pathname: st
       {/* Close button — mobile only */}
       <button
         onClick={() => setIsOpen(false)}
-        className="ml-auto xl:hidden p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+        className="ltr:ml-auto rtl:mr-auto xl:hidden p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
         aria-label="Close menu"
       >
         <X className="w-5 h-5" />
@@ -155,7 +155,7 @@ export function Sidebar({ user }: { user: any }) {
       {/* Hamburger — mobile only, always visible, left of topbar */}
       <button
         onClick={() => setIsOpen(true)}
-        className="xl:hidden fixed top-3.5 left-4 z-40 p-2 rounded-lg bg-white border border-slate-200 shadow-sm text-slate-600 hover:bg-slate-50 transition-colors"
+        className="xl:hidden fixed top-3.5 ltr:left-4 rtl:right-4 z-40 p-2 rounded-lg bg-white border border-slate-200 shadow-sm text-slate-600 hover:bg-slate-50 transition-colors"
         aria-label="Open menu"
       >
         <Menu className="w-5 h-5" />
@@ -177,8 +177,8 @@ export function Sidebar({ user }: { user: any }) {
 
       {/* Mobile drawer */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 xl:hidden transform transition-transform duration-200 ease-in-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 ltr:left-0 rtl:right-0 rtl:left-auto z-50 xl:hidden transform transition-transform duration-200 ease-in-out ${
+          isOpen ? "translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"
         }`}
       >
         <SidebarContent user={user} pathname={pathname} setIsOpen={setIsOpen} />

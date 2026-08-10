@@ -4,11 +4,19 @@ import { DeleteUserButton } from "./DeleteUserButton";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Users, Shield, User } from "lucide-react";
+import { cookies } from "next/headers";
+import { getDictionary } from "@/lib/i18n";
+import { Locale } from "@/lib/i18n/types";
 
 export default async function AdminUsersPage() {
   const users = await db.user.findMany({
     orderBy: { createdAt: "desc" },
   });
+
+  const cookieStore = await cookies();
+  const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
+  const t = getDictionary(locale);
+  const isRtl = locale === 'ar';
 
   return (
     <div className="space-y-6">
@@ -29,16 +37,16 @@ export default async function AdminUsersPage() {
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50/50">
                     <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      Name
+                      {t.users.name}
                     </th>
                     <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      Email
+                      {t.users.email}
                     </th>
                     <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      Role
+                      {t.users.role}
                     </th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      Actions
+                    <th className="px-6 py-4 ltr:text-right rtl:text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      {t.common.actions}
                     </th>
                   </tr>
                 </thead>
@@ -59,10 +67,10 @@ export default async function AdminUsersPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge variant={user.role === "ADMIN" ? "info" : "success"} className="flex items-center gap-1 w-fit">
                           {user.role === "ADMIN" && <Shield className="w-3 h-3" />}
-                          {user.role}
+                          {t.users[user.role as keyof typeof t.users] || user.role}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap ltr:text-right rtl:text-left text-sm font-medium">
                         <DeleteUserButton userId={user.id} />
                       </td>
                     </tr>
@@ -73,7 +81,7 @@ export default async function AdminUsersPage() {
                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 mb-4">
                           <Users className="w-6 h-6 text-slate-400" />
                         </div>
-                        <h3 className="text-sm font-medium text-slate-900">No users found</h3>
+                        <h3 className="text-sm font-medium text-slate-900">{t.empty.noResults}</h3>
                       </td>
                     </tr>
                   )}

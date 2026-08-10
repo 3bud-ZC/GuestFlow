@@ -20,9 +20,18 @@ import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
+import { cookies } from "next/headers";
+import { getDictionary } from "@/lib/i18n";
+import { Locale } from "@/lib/i18n/types";
+
 export default async function DashboardPage() {
   const data = await dashboardService.getDashboardData();
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const cookieStore = await cookies();
+  const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
+  const t = getDictionary(locale);
+  const isRtl = locale === 'ar';
+  
+  const today = new Date().toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
     <div className="space-y-6">
@@ -37,36 +46,37 @@ export default async function DashboardPage() {
           </p>
         </div>
         <Button href="/reservations/create" variant="primary">
-          New Reservation
+          {t.reservations.newReservation}
         </Button>
       </div>
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <MetricCard 
-          title="Check-ins Today" 
+          title={t.dashboard.checkinsToday} 
           value={data.metrics.checkinsToday} 
-          icon={<ArrowRight className="w-5 h-5 text-blue-600" />}
+          icon={<ArrowRight className={`w-5 h-5 text-blue-600 ${isRtl ? 'rotate-180' : ''}`} />}
           trend="Arrivals"
         />
         <MetricCard 
-          title="Check-outs Today" 
+          title={t.dashboard.checkoutsToday} 
           value={data.metrics.checkoutsToday} 
-          icon={<ArrowLeft className="w-5 h-5 text-emerald-600" />}
+          icon={<ArrowLeft className={`w-5 h-5 text-emerald-600 ${isRtl ? 'rotate-180' : ''}`} />}
           trend="Departures"
         />
         <MetricCard 
-          title="Missing IDs" 
+          title={t.dashboard.missingIds} 
           value={data.metrics.missingIds} 
           icon={<FileWarning className="w-5 h-5 text-amber-600" />}
           trend="Pending collection"
           urgent={data.metrics.missingIds > 0}
         />
         <MetricCard 
-          title="Open Tasks" 
+          title={t.dashboard.openTasks} 
           value={data.metrics.openTasks} 
           icon={<CheckSquare className="w-5 h-5 text-slate-600" />}
           trend="Requires action"
+          urgent={data.metrics.openTasks > 0}
         />
         {(data as any).whatsappEnabled ? (
           <>
@@ -78,7 +88,7 @@ export default async function DashboardPage() {
               urgent={data.metrics.failedMessages > 0}
             />
             <MetricCard 
-              title="Scheduled Msgs" 
+              title={t.dashboard.scheduledMessages} 
               value={data.metrics.scheduledMessages} 
               icon={<Clock className="w-5 h-5 text-indigo-600" />}
               trend="Automated queue"
@@ -87,13 +97,13 @@ export default async function DashboardPage() {
         ) : (
           <>
             <MetricCard 
-              title="Failed Messages" 
+              title={t.dashboard.failedMessages} 
               value="-" 
               icon={<MessageSquareWarning className="w-5 h-5 text-slate-400" />}
               trend="WhatsApp disabled"
             />
             <MetricCard 
-              title="Scheduled Msgs" 
+              title={t.dashboard.scheduledMessages} 
               value="-" 
               icon={<Clock className="w-5 h-5 text-slate-400" />}
               trend="WhatsApp disabled"
@@ -109,7 +119,7 @@ export default async function DashboardPage() {
             <div className="px-5 py-4 border-b border-amber-100 bg-amber-50/50 flex items-center justify-between rounded-t-xl">
               <h2 className="text-lg font-semibold text-amber-900 flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-amber-600" />
-                Action Required
+                {t.dashboard.actionRequired}
               </h2>
               {data.actionRequired.length > 0 && (
                 <Badge variant="warning">{data.actionRequired.length}</Badge>
@@ -121,8 +131,8 @@ export default async function DashboardPage() {
                 <div className="h-full min-h-[200px] flex items-center justify-center p-6">
                   <EmptyState 
                     icon={CheckSquare}
-                    title="All caught up"
-                    description="No urgent actions pending"
+                    title={t.dashboard.allCaughtUp}
+                    description=""
                   />
                 </div>
               ) : (
@@ -140,13 +150,13 @@ export default async function DashboardPage() {
                             </span>
                           </div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 shrink-0 mt-0.5 transition-colors" />
+                        <ChevronRight className={`w-4 h-4 text-slate-300 group-hover:text-blue-500 shrink-0 mt-0.5 transition-colors ${isRtl ? 'rotate-180' : ''}`} />
                       </div>
                     </Link>
                   ))}
                   {data.actionRequired.length > 8 && (
                     <Link href="/tasks" className="block p-4 text-center text-sm font-medium text-blue-600 hover:bg-slate-50 transition-colors">
-                      View all tasks ({data.actionRequired.length})
+                      {t.common.viewAll} ({data.actionRequired.length})
                     </Link>
                   )}
                 </>
@@ -158,24 +168,24 @@ export default async function DashboardPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Today's Arrivals */}
           <Card>
-            <CardHeader title="Today's Arrivals" action={
-              <Badge variant="neutral">{data.todaysCheckins.length} expected</Badge>
+            <CardHeader title={t.dashboard.todaysArrivals} action={
+              <Badge variant="neutral">{data.todaysCheckins.length}</Badge>
             } />
             {data.todaysCheckins.length === 0 ? (
               <div className="p-6">
                 <EmptyState 
                   icon={PlaneLanding}
-                  title="No arrivals"
-                  description="No check-ins scheduled for today."
+                  title={t.dashboard.noArrivals}
+                  description=""
                 />
               </div>
             ) : (
               <Table>
                 <TableHeader>
-                  <TableHead>Guest</TableHead>
-                  <TableHead>Room</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead><span className="sr-only">Actions</span></TableHead>
+                  <TableHead>{t.reservations.guest}</TableHead>
+                  <TableHead>{t.reservations.room}</TableHead>
+                  <TableHead>{t.reservations.status}</TableHead>
+                  <TableHead><span className="sr-only">{t.common.actions}</span></TableHead>
                 </TableHeader>
                 <TableBody>
                   {data.todaysCheckins.slice(0, 5).map((res: any) => (
@@ -204,15 +214,15 @@ export default async function DashboardPage() {
                             res.guest.documentStatus === 'RECEIVED' ? 'success' :
                             res.guest.documentStatus === 'PENDING' ? 'warning' : 'neutral'
                           }>
-                            {res.guest.documentStatus}
+                            {t.guests[res.guest.documentStatus as keyof typeof t.guests] || res.guest.documentStatus}
                           </Badge>
                         ) : (
                           <Badge variant="warning">MISSING</Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className={isRtl ? 'text-left' : 'text-right'}>
                         <Button href={`/reservations/${res.id}`} variant="ghost" size="sm">
-                          Manage
+                          {t.properties.manage}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -224,23 +234,23 @@ export default async function DashboardPage() {
 
           {/* Today's Departures */}
           <Card>
-            <CardHeader title="Today's Departures" action={
-              <Badge variant="neutral">{data.todaysCheckouts.length} expected</Badge>
+            <CardHeader title={t.dashboard.todaysDepartures} action={
+              <Badge variant="neutral">{data.todaysCheckouts.length}</Badge>
             } />
             {data.todaysCheckouts.length === 0 ? (
               <div className="p-6">
                 <EmptyState 
                   icon={PlaneTakeoff}
-                  title="No departures"
-                  description="No check-outs scheduled for today."
+                  title={t.dashboard.noDepartures}
+                  description=""
                 />
               </div>
             ) : (
               <Table>
                 <TableHeader>
-                  <TableHead>Guest</TableHead>
-                  <TableHead>Room</TableHead>
-                  <TableHead><span className="sr-only">Actions</span></TableHead>
+                  <TableHead>{t.reservations.guest}</TableHead>
+                  <TableHead>{t.reservations.room}</TableHead>
+                  <TableHead><span className="sr-only">{t.common.actions}</span></TableHead>
                 </TableHeader>
                 <TableBody>
                   {data.todaysCheckouts.slice(0, 5).map((res: any) => (
@@ -263,9 +273,9 @@ export default async function DashboardPage() {
                       <TableCell className="text-slate-600">
                         {res.room.name}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className={isRtl ? 'text-left' : 'text-right'}>
                         <Button href={`/reservations/${res.id}`} variant="ghost" size="sm">
-                          Manage
+                          {t.properties.manage}
                         </Button>
                       </TableCell>
                     </TableRow>

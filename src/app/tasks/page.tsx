@@ -9,6 +9,9 @@ import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CheckSquare, Filter, AlertCircle } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
+import { cookies } from "next/headers";
+import { getDictionary } from "@/lib/i18n";
+import { Locale } from "@/lib/i18n/types";
 
 export default async function TasksPage({
   searchParams,
@@ -19,12 +22,16 @@ export default async function TasksPage({
   const data = await taskService.getTasks({ ...searchParams, page });
   const tasks = data.items || [];
   const totalPages = data.totalPages || 1;
+  const cookieStore = await cookies();
+  const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
+  const t = getDictionary(locale);
+  const isRtl = locale === 'ar';
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Tasks</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t.navigation.tasks}</h1>
           <p className="mt-1 text-sm text-slate-500">
             Manage operational items and workflows.
           </p>
@@ -36,16 +43,16 @@ export default async function TasksPage({
         <Card>
           <CardContent className="p-4 sm:p-5">
               <form className="flex flex-wrap sm:flex-nowrap gap-3 items-center">
-                <select name="status" defaultValue={searchParams.status || "ALL"} className="block w-full sm:w-auto py-2 pl-3 pr-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
-                  <option value="ALL">All Statuses</option>
-                  {Object.values(TaskStatus).map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
+                <select name="status" defaultValue={searchParams.status || "ALL"} className="block w-full sm:w-auto py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
+                  <option value="ALL">{t.common.allStatuses || 'All Statuses'}</option>
+                  {Object.values(TaskStatus).map(s => <option key={s} value={s}>{t.tasks[s as keyof typeof t.tasks] || s}</option>)}
                 </select>
-                <select name="priority" defaultValue={searchParams.priority || "ALL"} className="block w-full sm:w-auto py-2 pl-3 pr-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
-                  <option value="ALL">All Priorities</option>
-                  {Object.values(TaskPriority).map(p => <option key={p} value={p}>{p}</option>)}
+                <select name="priority" defaultValue={searchParams.priority || "ALL"} className="block w-full sm:w-auto py-2 ltr:pl-3 rtl:pr-3 ltr:pr-8 rtl:pl-8 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
+                  <option value="ALL">{t.common.allPriorities || 'All Priorities'}</option>
+                  {Object.values(TaskPriority).map(p => <option key={p} value={p}>{t.tasks[p as keyof typeof t.tasks] || p}</option>)}
                 </select>
                 <Button type="submit" variant="secondary" icon={<Filter className="w-4 h-4" />}>
-                  Filter
+                  {t.common.filter}
                 </Button>
               </form>
             </CardContent>
@@ -55,19 +62,19 @@ export default async function TasksPage({
             {tasks.length === 0 ? (
               <EmptyState 
                 icon={CheckSquare}
-                title="No tasks found"
-                description="Try adjusting your filters or create a new task."
+                title={t.empty.noResults}
+                description=""
           />
         ) : (
           <>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t.tasks.title}</TableHead>
+                  <TableHead>{t.tasks.priority}</TableHead>
+                  <TableHead>{t.tasks.status}</TableHead>
                   <TableHead>Context</TableHead>
-                  <TableHead><span className="sr-only">Actions</span></TableHead>
+                  <TableHead><span className="sr-only">{t.common.actions}</span></TableHead>
                 </TableHeader>
                 <TableBody>
                   {tasks.map((task) => (
@@ -82,7 +89,7 @@ export default async function TasksPage({
                           task.priority === 'MEDIUM' ? 'info' :
                           'neutral'
                         }>
-                          {task.priority}
+                          {t.tasks[task.priority as keyof typeof t.tasks] || task.priority}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -92,13 +99,13 @@ export default async function TasksPage({
                           task.status === 'CANCELLED' ? 'neutral' :
                           'info'
                         }>
-                          {task.status.replace(/_/g, ' ')}
+                          {t.tasks[task.status as keyof typeof t.tasks] || task.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-slate-500">
                         {task.reservation && (
                           <Link href={`/reservations/${task.reservation.id}`} className="text-blue-600 hover:underline">
-                            Res: {task.reservation.code}
+                            Res: <span dir="ltr">{task.reservation.code}</span>
                           </Link>
                         )}
                         {!task.reservation && task.guest && (
@@ -108,9 +115,9 @@ export default async function TasksPage({
                         )}
                         {!task.reservation && !task.guest && "-"}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="ltr:text-right rtl:text-left">
                         <Button href={`/tasks/${task.id}`} variant="ghost" size="sm">
-                          View
+                          {t.common.viewAll}
                         </Button>
                       </TableCell>
                     </TableRow>

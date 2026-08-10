@@ -4,12 +4,19 @@ import { guestService } from "@/lib/services/guest";
 import { CreateReservationForm } from "./CreateReservationForm";
 import { Card, CardContent } from "@/components/ui/Card";
 import { BookOpen } from "lucide-react";
+import { cookies } from "next/headers";
+import { getDictionary } from "@/lib/i18n";
+import { Locale } from "@/lib/i18n/types";
 
 export default async function CreateReservationPage() {
   const properties = await propertyService.getProperties();
   const rooms = await roomService.getAllRooms();
   const guestsData = await guestService.getGuests();
   const guests = guestsData.items || [];
+  
+  const cookieStore = await cookies();
+  const locale = (cookieStore.get("gf-locale")?.value as Locale) || "en";
+  const t = getDictionary(locale);
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto pb-12">
@@ -19,7 +26,7 @@ export default async function CreateReservationPage() {
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">New Reservation</h1>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t.reservations.newReservation}</h1>
             <p className="mt-1 text-sm text-slate-500">
               Create a new booking. You can select an existing guest or add a new one inline.
             </p>
