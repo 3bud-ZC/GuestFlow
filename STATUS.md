@@ -1,7 +1,7 @@
 # GuestFlow v0.2.0 — Airbnb Integration
 
 Status:
-Production Stable — Awaiting Airbnb Feed Reconnection
+Production Stable — Reconnection UI Implemented & Deployed
 
 Record:
 - Security incident resolved (leaked test URL and secret removed)
@@ -14,6 +14,9 @@ Record:
 - Actual locking mechanism documented: Filesystem lock (`/tmp/guestflow-airbnb-sync.lock`) with stale lock DB recovery
 - Actual cron verification: `*/15 * * * *` executing `npm run airbnb:sync` via PM2 successfully
 - Build and tests pass cleanly
-- Actual production release path: `/var/www/guestflow/releases/<new_timestamp>` securely deployed
-- Final Git commit SHA will be generated shortly
+- **Implemented Reconnect UI in Admin Dashboard for safe Airbnb Calendar insertion**
+- **Strict Server-Side Duplication Checks added for URL and Listing ID**
+- **Client-Side Secret Leak prevented by omitting full URL from client hydration**
+- Actual production release path: `/var/www/guestflow/releases/1786344120` securely deployed
+- Final Git commit SHA: `7417a5d` (HEAD) + local deployment script
 - Meta WhatsApp: PAUSED / external pending
