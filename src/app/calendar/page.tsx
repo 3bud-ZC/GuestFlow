@@ -73,13 +73,13 @@ export default async function CalendarPage({
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-semibold text-slate-900">{displayDate.toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US', { month: 'long', year: 'numeric' })}</h1>
           <div className="flex items-center bg-white border border-slate-200 rounded-lg shadow-sm">
-            <Link href={createNavUrl(prevMonth)} className="p-2 hover:bg-slate-50 ltr:border-r rtl:border-l border-slate-200">
+            <Link href={createNavUrl(prevMonth)} aria-label={t.common.previous} className="p-2 hover:bg-slate-50 ltr:border-r rtl:border-l border-slate-200">
               <ChevronLeft className={`w-5 h-5 text-slate-600 ${isRtl ? 'rotate-180' : ''}`} />
             </Link>
             <Link href={`/calendar`} className="px-4 py-2 text-sm font-medium hover:bg-slate-50">
               {t.common.today}
             </Link>
-            <Link href={createNavUrl(nextMonth)} className="p-2 hover:bg-slate-50 ltr:border-l rtl:border-r border-slate-200">
+            <Link href={createNavUrl(nextMonth)} aria-label={t.common.next} className="p-2 hover:bg-slate-50 ltr:border-l rtl:border-r border-slate-200">
               <ChevronRight className={`w-5 h-5 text-slate-600 ${isRtl ? 'rotate-180' : ''}`} />
             </Link>
           </div>

@@ -58,10 +58,10 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     await page.locator('input[name="address"]').fill('123 QA Street');
     await page.getByRole('button', { name: /Create Property/i }).click();
 
-    await expect(page.getByText(propertyName)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(propertyName).first()).toBeVisible({ timeout: 10000 });
 
     await page.reload();
-    await expect(page.getByText(propertyName)).toBeVisible();
+    await expect(page.getByText(propertyName).first()).toBeVisible();
 
     // Capture the property id from the detail link for later tests
     const link = page.getByRole('link', { name: propertyName });
@@ -102,10 +102,10 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     await page.locator('input[name="name"]').fill(roomName);
     await page.getByRole('button', { name: /Add Room/i }).last().click();
 
-    await expect(page.getByText(roomName)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(roomName).first()).toBeVisible({ timeout: 10000 });
 
     await page.reload();
-    await expect(page.getByText(roomName)).toBeVisible();
+    await expect(page.getByText(roomName).first()).toBeVisible();
 
     assertNoSilentFailures();
   });
@@ -142,12 +142,12 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     await page.locator('input[name="phone"]').fill('+201000000000');
     await page.getByRole('button', { name: /Add Guest/i }).last().click();
 
-    await expect(page.getByText(guestFirstName)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(guestFirstName).first()).toBeVisible({ timeout: 10000 });
 
     // Search
     await page.locator('input[name="q"]').fill(guestFirstName);
     await page.getByRole('button', { name: /Search/i }).click();
-    await expect(page.getByText(guestFirstName)).toBeVisible();
+    await expect(page.getByText(guestFirstName).first()).toBeVisible();
 
     // Open
     const guestLink = page.getByRole('link', { name: new RegExp(guestFirstName) }).first();
@@ -161,10 +161,10 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     await page.getByRole('button', { name: 'Edit' }).click();
     await page.locator('input[name="nationality"]').fill('QA-Land');
     await page.getByRole('button', { name: 'Save' }).click();
-    await expect(page.getByText('QA-Land')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('QA-Land').first()).toBeVisible({ timeout: 10000 });
 
     await page.reload();
-    await expect(page.getByText('QA-Land')).toBeVisible();
+    await expect(page.getByText('QA-Land').first()).toBeVisible();
 
     // Update document status
     const statusSelect = page.locator('select').first();
@@ -184,28 +184,28 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     expect(guestId).toBeTruthy();
 
     await page.goto('/reservations/create');
-    await page.locator('input[name="code"]').fill(reservationCode);
-    await page.locator('select[name="platform"]').selectOption('DIRECT');
-    await page.locator('select[name="propertyId"]').selectOption(propertyId);
-    await page.locator('select[name="roomId"]').selectOption({ label: roomName });
-    await page.locator('select[name="guestId"]').selectOption(guestId);
+    await page.locator('input[name="code"]').first().fill(reservationCode);
+    await page.locator('select[name="platform"]').first().selectOption('DIRECT');
+    await page.locator('select[name="propertyId"]').first().selectOption(propertyId);
+    await page.locator('select[name="roomId"]').first().selectOption({ label: roomName });
+    await page.locator('select[name="guestId"]').first().selectOption(guestId);
 
     const today = new Date();
     const checkIn = new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const checkOut = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    await page.locator('input[name="checkInDate"]').fill(checkIn);
-    await page.locator('input[name="checkOutDate"]').fill(checkOut);
-    await page.locator('input[name="numberOfGuests"]').fill('2');
+    await page.locator('input[name="checkInDate"]').first().fill(checkIn);
+    await page.locator('input[name="checkOutDate"]').first().fill(checkOut);
+    await page.locator('input[name="numberOfGuests"]').first().fill('2');
 
     await page.getByRole('button', { name: /Create Reservation/i }).click();
 
     await expect(page).toHaveURL(/\/reservations\/[a-zA-Z0-9_-]+/, { timeout: 15000 });
-    await expect(page.getByText(reservationCode)).toBeVisible();
-    await expect(page.getByText(propertyName)).toBeVisible();
-    await expect(page.getByText(roomName)).toBeVisible();
+    await expect(page.getByText(reservationCode).first()).toBeVisible();
+    await expect(page.getByText(propertyName).first()).toBeVisible();
+    await expect(page.getByText(roomName).first()).toBeVisible();
 
     await page.reload();
-    await expect(page.getByText(reservationCode)).toBeVisible();
+    await expect(page.getByText(reservationCode).first()).toBeVisible();
 
     assertNoSilentFailures();
   });
@@ -224,10 +224,10 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     await expect(page.getByRole('button', { name: /CHECK OUT GUEST/i })).toHaveCount(0);
 
     await page.getByRole('button', { name: /CHECK IN GUEST/i }).click();
-    await expect(page.getByText(/CHECKED_IN/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('CHECKED_IN', { exact: true })).toBeVisible({ timeout: 10000 });
 
     await page.getByRole('button', { name: /CHECK OUT GUEST/i }).click();
-    await expect(page.getByText(/CHECKED_OUT/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('CHECKED_OUT', { exact: true })).toBeVisible({ timeout: 10000 });
 
     // Now fully checked out — no further primary operations should be offered
     await expect(page.getByRole('button', { name: /CHECK IN GUEST/i })).toHaveCount(0);
@@ -242,24 +242,27 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     expect(guestId).toBeTruthy();
 
     await page.goto('/reservations/create');
-    await page.locator('input[name="code"]').fill(reservationCode2);
-    await page.locator('select[name="platform"]').selectOption('DIRECT');
-    await page.locator('select[name="propertyId"]').selectOption(propertyId);
-    await page.locator('select[name="roomId"]').selectOption({ label: roomName });
-    await page.locator('select[name="guestId"]').selectOption(guestId);
+    await page.locator('input[name="code"]').first().fill(reservationCode2);
+    await page.locator('select[name="platform"]').first().selectOption('DIRECT');
+    await page.locator('select[name="propertyId"]').first().selectOption(propertyId);
+    await page.locator('select[name="roomId"]').first().selectOption({ label: roomName });
+    await page.locator('select[name="guestId"]').first().selectOption(guestId);
 
     const today = new Date();
     const checkIn = new Date(today.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const checkOut = new Date(today.getTime() + 12 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    await page.locator('input[name="checkInDate"]').fill(checkIn);
-    await page.locator('input[name="checkOutDate"]').fill(checkOut);
-    await page.locator('input[name="numberOfGuests"]').fill('1');
+    await page.locator('input[name="checkInDate"]').first().fill(checkIn);
+    await page.locator('input[name="checkOutDate"]').first().fill(checkOut);
+    await page.locator('input[name="numberOfGuests"]').first().fill('1');
     await page.getByRole('button', { name: /Create Reservation/i }).click();
     await expect(page).toHaveURL(/\/reservations\/[a-zA-Z0-9_-]+/, { timeout: 15000 });
 
     page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: /Cancel Reservation/i }).click();
-    await expect(page.getByText(/CANCELLED/i)).toBeVisible({ timeout: 10000 });
+    // Scoped to the reservation status badge's own styling — a cancelled
+    // reservation also cascades to cancel related automation Tasks, whose
+    // status badges also render the text "CANCELLED" elsewhere on this page.
+    await expect(page.locator('span.bg-red-100.text-red-800', { hasText: 'CANCELLED' })).toBeVisible({ timeout: 10000 });
 
     assertNoSilentFailures();
   });
@@ -274,7 +277,7 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     await page.locator('textarea[name="description"]').fill('Created by functional E2E suite');
     await page.getByRole('button', { name: /Create Task/i }).last().click();
 
-    await expect(page.getByText(taskTitle)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(taskTitle).first()).toBeVisible({ timeout: 10000 });
 
     const row = page.locator('tr', { hasText: taskTitle });
     await row.getByRole('link', { name: /View all/i }).click();
@@ -297,7 +300,7 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     await page.goto('/tasks');
     await page.locator('select[name="status"]').selectOption('DONE');
     await page.getByRole('button', { name: /Filter/i }).click();
-    await expect(page.getByText(taskTitle)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(taskTitle).first()).toBeVisible({ timeout: 10000 });
 
     assertNoSilentFailures();
   });
