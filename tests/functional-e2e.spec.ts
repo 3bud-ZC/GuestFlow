@@ -288,6 +288,7 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     await expect(page.getByText(/Updating/i)).toHaveCount(0, { timeout: 10000 });
 
     await statusSelect.selectOption('DONE');
+    await expect(page.getByText(/Updating/i)).toHaveCount(0, { timeout: 10000 });
     await page.reload();
     await expect(page.locator('select').first()).toHaveValue('DONE');
 
