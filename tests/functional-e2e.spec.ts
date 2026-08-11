@@ -322,6 +322,7 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
 
     if (propertyId) {
       await page.locator('select[name="propertyId"]').selectOption(propertyId);
+      await page.getByRole('button', { name: /Filter/i }).click();
       await expect(page).toHaveURL(new RegExp(`propertyId=${propertyId}`));
     }
 
