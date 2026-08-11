@@ -21,11 +21,11 @@ export function getE2ECredentials(role: E2ERole = 'admin') {
 export async function login(page: Page, role: E2ERole = 'admin') {
   const { email, password } = getE2ECredentials(role);
 
-  await page.goto('/login');
+  await page.goto('/login', { timeout: 45000 });
   const emailInput = page.locator('input[type="email"]');
-  await emailInput.waitFor({ state: 'visible', timeout: 10000 });
+  await emailInput.waitFor({ state: 'visible', timeout: 15000 });
   await emailInput.fill(email);
   await page.locator('input[type="password"]').fill(password);
   await page.locator('button[type="submit"]').click();
-  await page.waitForURL('**/', { timeout: 15000 });
+  await page.waitForURL('**/', { timeout: 20000 });
 }

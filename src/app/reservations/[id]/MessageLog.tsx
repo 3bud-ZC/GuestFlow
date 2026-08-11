@@ -101,9 +101,9 @@ export function MessageLog({
                 </div>
                 <div className="text-xs text-gray-500 mb-2">
                   {msg.status === 'SCHEDULED' && msg.scheduledAt ? (
-                    <span>Scheduled for {new Date(msg.scheduledAt).toLocaleString()}</span>
+                    <span>Scheduled for {new Date(msg.scheduledAt).toLocaleString('en-US', { timeZone: 'UTC' })}</span>
                   ) : (
-                    <span>{new Date(msg.createdAt).toLocaleString()}</span>
+                    <span>{new Date(msg.createdAt).toLocaleString('en-US', { timeZone: 'UTC' })}</span>
                   )}
                 </div>
                 {msg.status === 'FAILED' && msg.errorInfo && (

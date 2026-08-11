@@ -88,7 +88,7 @@ export function TemplateList({ initialTemplates }: { initialTemplates: MessageTe
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-slate-500">
-                    {new Date(template.updatedAt).toLocaleDateString()}
+                    {new Date(template.updatedAt).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button onClick={() => handleEdit(template)} variant="ghost" size="sm" icon={<Pencil className="w-4 h-4" />}>

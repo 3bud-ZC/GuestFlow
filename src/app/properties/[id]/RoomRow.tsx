@@ -117,7 +117,7 @@ export function RoomRow({ room, isAdmin, propertyId }: { room: any, isAdmin: boo
                 <span className="text-slate-500">{t.airbnb.listingId}: {room.airbnbListingId || t.airbnb.unknown}</span>
                 <span className="text-slate-500">•</span>
                 <span className="text-slate-500">
-                  {t.airbnb.lastSync}: {room.airbnbLastSyncedAt ? new Date(room.airbnbLastSyncedAt).toLocaleString() : t.airbnb.none}
+                  {t.airbnb.lastSync}: {room.airbnbLastSyncedAt ? new Date(room.airbnbLastSyncedAt).toLocaleString('en-US', { timeZone: 'UTC' }) : t.airbnb.none}
                 </span>
                 {!isHealthy && (
                   <span className="text-red-600 ml-1 block w-full mt-1">{t.common.error}: {room.airbnbLastSyncError}</span>

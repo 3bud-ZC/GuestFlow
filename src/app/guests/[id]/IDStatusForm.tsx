@@ -6,13 +6,15 @@ import { GuestDocumentStatus } from "@prisma/client";
 
 export function IDStatusForm({ guestId, currentStatus }: { guestId: string, currentStatus: GuestDocumentStatus }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleStatusChange(e: React.ChangeEvent<HTMLSelectElement>) {
     setLoading(true);
+    setError("");
     try {
       await updateGuestDocumentStatusAction(guestId, e.target.value as GuestDocumentStatus);
     } catch (err: any) {
-      alert(err.message || "Failed to update ID status");
+      setError(err.message || "Failed to update ID status");
     } finally {
       setLoading(false);
     }
@@ -20,6 +22,7 @@ export function IDStatusForm({ guestId, currentStatus }: { guestId: string, curr
 
   return (
     <div>
+      {error && <div className="mb-2 text-sm text-red-600">{error}</div>}
       <select
         value={currentStatus}
         onChange={handleStatusChange}

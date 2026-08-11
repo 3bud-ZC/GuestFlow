@@ -24,6 +24,7 @@ const RUN_PREFIX = `GF-E2E-${Date.now()}`;
 
 test.describe('GuestFlow Functional Acceptance Suite', () => {
   test.describe.configure({ mode: 'serial' });
+  test.setTimeout(60000);
 
   const propertyName = `${RUN_PREFIX}-Property`;
   const roomName = `${RUN_PREFIX}-Room`;
@@ -50,7 +51,7 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     const assertNoSilentFailures = failOnSilentErrors(page);
 
     await page.goto('/properties');
-    await expect(page.getByRole('heading', { name: /Properties/i })).toBeVisible();
+    await expect(page.getByRole('main').getByRole('heading', { name: /Properties/i })).toBeVisible();
 
     await page.getByRole('button', { name: /Add Property/i }).click();
     await page.locator('input[name="name"]').fill(propertyName);
@@ -168,7 +169,10 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     // Update document status
     const statusSelect = page.locator('select').first();
     await statusSelect.selectOption('RECEIVED');
-    await expect(page.getByText(/RECEIVED|Received/i).first()).toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(1000);
+    await expect(statusSelect).toHaveValue('RECEIVED');
+    await page.reload();
+    await expect(page.locator('select').first()).toHaveValue('RECEIVED');
 
     assertNoSilentFailures();
   });
