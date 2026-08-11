@@ -21,7 +21,7 @@ test.describe('Users / Roles', () => {
   test('Admin creates a RECEPTION QA user; RECEPTION is blocked server-side from admin-only mutations', async ({ page, request }) => {
     await login(page, 'admin');
     await page.goto('/admin/users');
-    await page.getByRole('button', { name: /Add User|New User/i }).click();
+    await page.getByRole('button', { name: /Add User|New User|Create User/i }).click();
     await page.locator('input[name="name"]').fill(`${RUN_PREFIX}-Reception`);
     await page.locator('input[name="email"]').fill(receptionEmail);
     await page.locator('input[name="password"]').fill(receptionPassword);
@@ -41,7 +41,7 @@ test.describe('Users / Roles', () => {
 
     await page.goto('/admin/users');
     // A RECEPTION user must not see the admin user-management controls.
-    await expect(page.getByRole('button', { name: /Add User|New User/i })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Add User|New User|Create User/i })).toHaveCount(0);
 
     // Reception CAN reach reception-permitted areas.
     await page.goto('/guests');
@@ -155,7 +155,7 @@ test.describe('Mobile action parity (390x844)', () => {
     await addBtn.click();
     const nameInput = page.locator('input[name="name"]');
     await expect(nameInput).toBeVisible();
-    const submitBtn = page.getByRole('button', { name: /Create Property/i }).last();
+    const submitBtn = page.getByRole('button', { name: /Add Property/i }).last();
     await expect(submitBtn).toBeVisible();
     const box = await submitBtn.boundingBox();
     expect(box).not.toBeNull();

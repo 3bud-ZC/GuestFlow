@@ -161,9 +161,10 @@ export function AirbnbWizard() {
             ) : (
               <div className="space-y-5 max-w-xl">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">{t.airbnb.selectProperty}</label>
-                  <select 
-                    value={selectedPropertyId} 
+                  <label htmlFor="airbnb-select-property" className="block text-sm font-medium text-slate-700 mb-1">{t.airbnb.selectProperty}</label>
+                  <select
+                    id="airbnb-select-property"
+                    value={selectedPropertyId}
                     onChange={e => {
                       setSelectedPropertyId(e.target.value);
                       setSelectedRoomId("");
@@ -179,9 +180,10 @@ export function AirbnbWizard() {
 
                 {mode === "existing" ? (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">{t.airbnb.selectRoom}</label>
-                    <select 
-                      value={selectedRoomId} 
+                    <label htmlFor="airbnb-select-room" className="block text-sm font-medium text-slate-700 mb-1">{t.airbnb.selectRoom}</label>
+                    <select
+                      id="airbnb-select-room"
+                      value={selectedRoomId}
                       onChange={e => setSelectedRoomId(e.target.value)}
                       className="w-full rounded border border-slate-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
                     >
@@ -196,9 +198,10 @@ export function AirbnbWizard() {
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">{t.airbnb.newRoomName}</label>
-                    <input 
-                      type="text" 
+                    <label htmlFor="airbnb-new-room-name" className="block text-sm font-medium text-slate-700 mb-1">{t.airbnb.newRoomName}</label>
+                    <input
+                      id="airbnb-new-room-name"
+                      type="text"
                       value={roomName}
                       onChange={e => setRoomName(e.target.value)}
                       className="w-full rounded border border-slate-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
@@ -208,9 +211,10 @@ export function AirbnbWizard() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">{t.airbnb.airbnbCalendarLink}</label>
-                  <input 
-                    type="url" 
+                  <label htmlFor="airbnb-calendar-url" className="block text-sm font-medium text-slate-700 mb-1">{t.airbnb.airbnbCalendarLink}</label>
+                  <input
+                    id="airbnb-calendar-url"
+                    type="url"
                     value={icalUrl}
                     onChange={e => {
                       setIcalUrl(e.target.value);

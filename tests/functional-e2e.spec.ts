@@ -56,7 +56,7 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     await page.getByRole('button', { name: /Add Property/i }).click();
     await page.locator('input[name="name"]').fill(propertyName);
     await page.locator('input[name="address"]').fill('123 QA Street');
-    await page.getByRole('button', { name: /Create Property/i }).click();
+    await page.getByRole('button', { name: /Add Property/i }).last().click();
 
     await expect(page.getByText(propertyName).first()).toBeVisible({ timeout: 10000 });
 
@@ -272,10 +272,10 @@ test.describe('GuestFlow Functional Acceptance Suite', () => {
     const assertNoSilentFailures = failOnSilentErrors(page);
 
     await page.goto('/tasks');
-    await page.getByRole('button', { name: /Create Task/i }).click();
+    await page.getByRole('button', { name: /Add Task/i }).click();
     await page.locator('input[name="title"]').fill(taskTitle);
     await page.locator('textarea[name="description"]').fill('Created by functional E2E suite');
-    await page.getByRole('button', { name: /Create Task/i }).last().click();
+    await page.getByRole('button', { name: /Add Task/i }).last().click();
 
     await expect(page.getByText(taskTitle).first()).toBeVisible({ timeout: 10000 });
 
