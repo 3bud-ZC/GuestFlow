@@ -28,7 +28,7 @@ test.describe('Users / Roles', () => {
     await page.locator('select[name="role"]').selectOption('RECEPTION');
     await page.getByRole('button', { name: /Create User/i }).click();
 
-    await expect(page.getByText(receptionEmail)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(receptionEmail).first()).toBeVisible({ timeout: 10000 });
 
     // Log in as the new RECEPTION user and confirm the admin-only Users page
     // is not reachable / does not expose admin mutation controls.
@@ -72,7 +72,7 @@ test.describe('Arabic action parity', () => {
     await page.getByRole('button', { name: /إضافة عقار/i }).click();
     await page.locator('input[name="name"]').fill(propertyName);
     await page.getByRole('button', { name: /إنشاء|حفظ/i }).click();
-    await expect(page.getByText(propertyName)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(propertyName).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('Add Guest in Arabic — real DB write', async ({ page }) => {
@@ -81,7 +81,7 @@ test.describe('Arabic action parity', () => {
     await page.locator('input[name="firstName"]').fill(guestFirstName);
     await page.locator('input[name="lastName"]').fill('Arabic');
     await page.getByRole('button', { name: /إضافة ضيف/i }).last().click();
-    await expect(page.getByText(guestFirstName)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(guestFirstName).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('Create Task in Arabic — real DB write', async ({ page }) => {
@@ -89,12 +89,12 @@ test.describe('Arabic action parity', () => {
     await page.getByRole('button', { name: /إنشاء مهمة|مهمة جديدة/i }).click();
     await page.locator('input[name="title"]').fill(taskTitle);
     await page.getByRole('button', { name: /إنشاء مهمة|إنشاء/i }).last().click();
-    await expect(page.getByText(taskTitle)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(taskTitle).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('Airbnb Test Connection invalid-URL flow shows Arabic error text', async ({ page }) => {
     await page.goto('/properties/connect-airbnb');
-    await expect(page.getByText(/ربط تقويم Airbnb/i)).toBeVisible();
+    await expect(page.getByText(/ربط تقويم Airbnb/i).first()).toBeVisible();
 
     await page.getByRole('button', { name: /غرفة جديدة/i }).click();
     await page.getByRole('button', { name: /التالي/i }).click();
@@ -123,13 +123,15 @@ test.describe('Mobile action parity (390x844)', () => {
 
   test('Mobile nav drawer opens and routes are reachable', async ({ page }) => {
     await page.goto('/');
+    // The desktop sidebar's <nav> is always in the DOM (display:none below
+    // the xl breakpoint) alongside the mobile drawer's own <nav> (shown via
+    // a translate-x transform) — scope to the drawer specifically.
     const menuButton = page.getByRole('button', { name: /Open menu|menu/i }).first();
-    if (await menuButton.count() > 0) {
-      await menuButton.click();
-      await expect(page.locator('nav').first()).toBeVisible();
-    } else {
-      await expect(page.locator('nav').first()).toBeAttached();
-    }
+    await expect(menuButton).toBeVisible();
+    await menuButton.click();
+    await expect(page.locator('nav').last()).toBeVisible();
+    await page.locator('nav').last().getByRole('link', { name: /Calendar|Guests/i }).first().click();
+    await expect(page.locator('nav').last()).not.toBeVisible();
   });
 
   test('Quick Add is reachable and its actions are clickable without overflow', async ({ page }) => {

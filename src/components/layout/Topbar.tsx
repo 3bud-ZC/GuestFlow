@@ -50,6 +50,7 @@ export function Topbar({ user }: { user: any }) {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setQuickAddOpen(!quickAddOpen)}
+              aria-label={t.topbar.quickAdd}
               className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
             >
               <Plus className="w-4 h-4" />
