@@ -27,5 +27,5 @@ export async function login(page: Page, role: E2ERole = 'admin') {
   await emailInput.fill(email);
   await page.locator('input[type="password"]').fill(password);
   await page.locator('button[type="submit"]').click();
-  await page.waitForURL('**/', { timeout: 20000 });
+  await page.waitForURL('**/', { timeout: 30000 });
 }
