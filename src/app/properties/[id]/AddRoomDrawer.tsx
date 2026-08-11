@@ -5,18 +5,20 @@ import { Drawer } from "@/components/ui/Drawer";
 import { RoomForm } from "./RoomForm";
 import { Button } from "@/components/ui/Button";
 import { Plus } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export function AddRoomDrawer({ propertyId }: { propertyId: string }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslation();
 
   return (
     <Drawer
-      title="Add Room"
+      title={t.airbnb.addRoom}
       open={open}
       onOpenChange={setOpen}
       trigger={
         <Button icon={<Plus className="w-4 h-4" />}>
-          Add Room
+          {t.airbnb.addRoom}
         </Button>
       }
     >

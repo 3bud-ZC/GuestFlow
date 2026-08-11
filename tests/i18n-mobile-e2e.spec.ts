@@ -71,7 +71,7 @@ test.describe('Arabic action parity', () => {
 
     await page.getByRole('button', { name: /إضافة عقار/i }).click();
     await page.locator('input[name="name"]').fill(propertyName);
-    await page.getByRole('button', { name: /إنشاء|حفظ/i }).click();
+    await page.getByRole('button', { name: /إضافة عقار/i }).last().click();
     await expect(page.getByText(propertyName).first()).toBeVisible({ timeout: 10000 });
   });
 
@@ -86,9 +86,9 @@ test.describe('Arabic action parity', () => {
 
   test('Create Task in Arabic — real DB write', async ({ page }) => {
     await page.goto('/tasks');
-    await page.getByRole('button', { name: /إنشاء مهمة|مهمة جديدة/i }).click();
+    await page.getByRole('button', { name: /إضافة مهمة/i }).click();
     await page.locator('input[name="title"]').fill(taskTitle);
-    await page.getByRole('button', { name: /إنشاء مهمة|إنشاء/i }).last().click();
+    await page.getByRole('button', { name: /إضافة مهمة/i }).last().click();
     await expect(page.getByText(taskTitle).first()).toBeVisible({ timeout: 10000 });
   });
 

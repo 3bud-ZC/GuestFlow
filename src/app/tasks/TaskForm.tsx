@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { createTaskAction } from "./actions";
 import { TaskPriority } from "@prisma/client";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const t = useTranslation();
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -25,21 +27,21 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
   return (
     <form id="task-form" action={handleSubmit} className="space-y-4">
       {error && <div className="text-red-600 text-sm">{error}</div>}
-      
+
       <div>
-        <label className="block text-sm font-medium text-gray-700">Title</label>
+        <label className="block text-sm font-medium text-gray-700">{t.tasks.title}</label>
         <input type="text" name="title" required className="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500 sm:text-sm" />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Description</label>
+        <label className="block text-sm font-medium text-gray-700">{t.tasks.description}</label>
         <textarea name="description" className="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500 sm:text-sm" rows={2}></textarea>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Priority</label>
+        <label className="block text-sm font-medium text-gray-700">{t.tasks.priority}</label>
         <select name="priority" className="mt-1 block w-full rounded border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-          {Object.values(TaskPriority).map(p => <option key={p} value={p}>{p}</option>)}
+          {Object.values(TaskPriority).map(p => <option key={p} value={p}>{t.tasks[p as keyof typeof t.tasks] || p}</option>)}
         </select>
       </div>
 
@@ -54,7 +56,7 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
 
       <button type="submit" disabled={loading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50">
-        {loading ? "Creating..." : "Create Task"}
+        {loading ? "..." : t.tasks.addTask}
       </button>
     </form>
   );
