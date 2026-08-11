@@ -1,24 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 
-async function loginAndGetCookie() {
-  const loginUrl = 'http://localhost:3000/api/auth/callback/credentials';
-  const res = await fetch(loginUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      email: 'admin@guestflow.app', // Usually the default, or I'll just skip auth and measure redirects if it fails
-      password: 'admin', // I should check .env or just use whatever
-      csrfToken: '' // This might be complicated.
-    }).toString()
-  });
-  
-  const cookies = res.headers.get('set-cookie');
-  return cookies;
-}
-
 async function measureRoute(url: string, cookies: string | null) {
   const start = performance.now();
   const res = await fetch(url, {

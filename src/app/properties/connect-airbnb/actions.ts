@@ -42,12 +42,25 @@ export async function probeAirbnbUrl(url: string) {
   return result;
 }
 
-export async function connectExistingRoom(roomId: string, url: string) {
+type ConnectResult =
+  | { success: true }
+  | { success: false; errorCode: string; error: string; errorAr: string };
+
+// Server Actions that `throw` in production have their Error.message
+// redacted by Next.js before it reaches the client (only a digest survives).
+// Expected/validation failures must therefore be returned as structured
+// data, not thrown, so the UI can show a specific, localized message.
+export async function connectExistingRoom(roomId: string, url: string): Promise<ConnectResult> {
   const user = await getCurrentUser();
   requireAdmin(user);
 
   if (!roomId) {
-    throw new Error("Please select a room to connect.");
+    return {
+      success: false,
+      errorCode: "ROOM_REQUIRED",
+      error: "Please select a room to connect.",
+      errorAr: "يرجى اختيار غرفة للربط.",
+    };
   }
 
   try {
@@ -55,21 +68,36 @@ export async function connectExistingRoom(roomId: string, url: string) {
     return { success: true };
   } catch (e: any) {
     if (e instanceof AirbnbError) {
-      throw new Error(e.userMessage.en);
+      return { success: false, errorCode: e.code, error: e.userMessage.en, errorAr: e.userMessage.ar };
     }
-    throw e;
+    return {
+      success: false,
+      errorCode: "AIRBNB_SYNC_FAILED",
+      error: "Failed to connect the calendar. Please try again.",
+      errorAr: "فشل ربط التقويم. يرجى المحاولة مرة أخرى.",
+    };
   }
 }
 
-export async function connectNewRoom(propertyId: string, roomName: string, url: string) {
+export async function connectNewRoom(propertyId: string, roomName: string, url: string): Promise<ConnectResult> {
   const user = await getCurrentUser();
   requireAdmin(user);
 
   if (!propertyId) {
-    throw new Error("Please select a property.");
+    return {
+      success: false,
+      errorCode: "PROPERTY_REQUIRED",
+      error: "Please select a property.",
+      errorAr: "يرجى اختيار عقار.",
+    };
   }
   if (!roomName?.trim()) {
-    throw new Error("Please enter a room name.");
+    return {
+      success: false,
+      errorCode: "ROOM_NAME_REQUIRED",
+      error: "Please enter a room name.",
+      errorAr: "يرجى إدخال اسم الغرفة.",
+    };
   }
 
   try {
@@ -77,13 +105,18 @@ export async function connectNewRoom(propertyId: string, roomName: string, url: 
       propertyId,
       name: roomName.trim(),
       airbnbIcalUrl: url,
-      airbnbSyncEnabled: true, // FIX: ensure sync is enabled for new rooms
+      airbnbSyncEnabled: true, // ensure sync is enabled for new rooms
     });
     return { success: true };
   } catch (e: any) {
     if (e instanceof AirbnbError) {
-      throw new Error(e.userMessage.en);
+      return { success: false, errorCode: e.code, error: e.userMessage.en, errorAr: e.userMessage.ar };
     }
-    throw e;
+    return {
+      success: false,
+      errorCode: "AIRBNB_SYNC_FAILED",
+      error: "Failed to connect the calendar. Please try again.",
+      errorAr: "فشل ربط التقويم. يرجى المحاولة مرة أخرى.",
+    };
   }
 }

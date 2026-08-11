@@ -28,16 +28,19 @@ export class AirbnbError extends Error {
   }
 }
 
-// Validate that a URL is a legitimate Airbnb export calendar URL
+// Validate that a URL is a legitimate Airbnb export calendar URL.
+// Airbnb's "Export Calendar" feature only ever issues iCal links on the
+// primary www.airbnb.com host (or an Airbnb-controlled *.airbnb.com
+// subdomain) — there is no separate export host for regional ccTLDs
+// (airbnb.co.uk, airbnb.fr, ...), so this allowlist is not broadened
+// beyond www.airbnb.com. Strict hostname + path matching also doubles
+// as SSRF protection: localhost, private IPs, and arbitrary domains can
+// never match, and non-HTTPS URLs are rejected outright.
 function validateAirbnbUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== 'https:') return false;
-    // Accept www.airbnb.com and regional variants (airbnb.co.uk, airbnb.fr etc.)
-    if (!parsed.hostname.endsWith('.airbnb.com') && parsed.hostname !== 'www.airbnb.com') {
-      // Also allow base airbnb.com without subdomain? No — only www.airbnb.com is legitimate for exports
-      if (parsed.hostname !== 'www.airbnb.com') return false;
-    }
+    if (parsed.hostname !== 'www.airbnb.com' && !parsed.hostname.endsWith('.airbnb.com')) return false;
     if (!parsed.pathname.startsWith('/calendar/ical/')) return false;
     if (!parsed.pathname.endsWith('.ics')) return false;
     return true;

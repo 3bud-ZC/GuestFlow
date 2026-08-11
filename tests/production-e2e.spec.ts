@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { login } from './helpers/auth';
 
 // Helper to check for Next.js error boundary
 async function assertNoErrorBoundary(page: Page) {
@@ -9,16 +10,7 @@ async function assertNoErrorBoundary(page: Page) {
 
 test.describe('Production E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Login before each test
-    await page.goto('/login');
-    const emailInput = page.locator('input[type="email"]');
-    const passwordInput = page.locator('input[type="password"]');
-    if (await emailInput.isVisible()) {
-      await emailInput.fill('admin@guestflow.app');
-      await passwordInput.fill('password');
-      await page.locator('button[type="submit"]').click();
-      await page.waitForURL('**/');
-    }
+    await login(page, 'admin');
   });
 
   test.describe('Calendar Recovery', () => {

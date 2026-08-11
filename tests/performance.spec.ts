@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { getE2ECredentials } from './helpers/auth';
 
 interface PerformanceMetric {
   route: string;
@@ -14,16 +15,16 @@ test.describe('Real Production Navigation Performance Pass', () => {
 
   test('Benchmark route transition performance across warm authenticated session', async ({ page }) => {
     const baseUrl = process.env.PLAYWRIGHT_TEST_BASE_URL || 'https://guestflow.abud.fun';
+    const { email, password } = getE2ECredentials('admin');
 
     // 1. Authenticate session
     await page.goto(`${baseUrl}/login`);
     const emailInput = page.locator('input[type="email"]');
-    if (await emailInput.isVisible()) {
-      await emailInput.fill('admin@guestflow.app');
-      await page.locator('input[type="password"]').fill('password');
-      await page.locator('button[type="submit"]').click();
-      await page.waitForURL(`${baseUrl}/`);
-    }
+    await emailInput.waitFor({ state: 'visible', timeout: 10000 });
+    await emailInput.fill(email);
+    await page.locator('input[type="password"]').fill(password);
+    await page.locator('button[type="submit"]').click();
+    await page.waitForURL(`${baseUrl}/`);
 
     // Warm up session
     await page.goto(`${baseUrl}/`);

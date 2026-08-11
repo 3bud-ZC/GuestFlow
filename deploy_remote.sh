@@ -28,7 +28,7 @@ else
 fi
 
 # 4. Install dependencies deterministically
-npm install
+npm ci
 
 # 5. Database generation & migration
 npx prisma generate
@@ -41,13 +41,38 @@ npm run build
 ln -sfn "$NEW_RELEASE_PATH" "$CURRENT_DIR"
 echo "Switched /current to $NEW_RELEASE_PATH"
 
-# 8. Restart guestflow with PM2
-# PM2 restarts guestflow and preserves the rest of the ecosystem
-cd "$CURRENT_DIR"
-pm2 restart guestflow || pm2 start npm --name "guestflow" -- run start
+# 8. Restart guestflow with PM2 via a persistent ecosystem file
+# (guestflow must bind PORT=3232 to match the nginx proxy_pass target;
+# the ecosystem file bakes that in so restarts can't silently drift to
+# the Next.js default port. Written each deploy so a fresh server needs
+# no manual PM2 setup.)
+cat > /var/www/guestflow/ecosystem.config.js <<'ECOSYSTEM'
+module.exports = {
+  apps: [{
+    name: 'guestflow',
+    cwd: '/var/www/guestflow/current',
+    script: 'npm',
+    args: 'run start',
+    env: { PORT: '3232', NODE_ENV: 'production' },
+    autorestart: true,
+    max_restarts: 10,
+  }]
+}
+ECOSYSTEM
 
-# pm2 save to persist
+cd "$CURRENT_DIR"
+pm2 startOrRestart /var/www/guestflow/ecosystem.config.js
+
+# pm2 save to persist across reboots
 pm2 save
+
+# 8b. Health check: verify the app actually bound port 3232 before declaring success
+sleep 3
+if ! curl -sf -o /dev/null "http://127.0.0.1:3232/"; then
+  echo "ERROR: guestflow did not respond on port 3232 after restart. Check: pm2 logs guestflow"
+  exit 1
+fi
+echo "Health check passed: guestflow responding on port 3232"
 
 # 9. Release retention: Keep current release and previous 4 timestamped releases
 echo "Cleaning up old releases in ${RELEASE_DIR}..."

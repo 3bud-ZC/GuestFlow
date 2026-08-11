@@ -16,11 +16,26 @@ vi.mock('@/lib/db', () => ({
   }
 }));
 
+const { MockAirbnbError } = vi.hoisted(() => {
+  class MockAirbnbError extends Error {
+    code: string;
+    userMessage: { en: string; ar: string };
+    constructor(code: string, message: string, userMessage: { en: string; ar: string }) {
+      super(message);
+      this.name = 'AirbnbError';
+      this.code = code;
+      this.userMessage = userMessage;
+    }
+  }
+  return { MockAirbnbError };
+});
+
 vi.mock('../airbnb', () => ({
   airbnbService: {
     validateUrl: vi.fn(),
     probe: vi.fn(),
-  }
+  },
+  AirbnbError: MockAirbnbError,
 }));
 
 vi.mock('../sync', () => ({

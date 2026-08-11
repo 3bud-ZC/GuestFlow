@@ -30,7 +30,13 @@ export function StatusForm({
 
   const isCheckInAvailable = currentStatus === 'CONFIRMED';
   const isCheckOutAvailable = currentStatus === 'CHECKED_IN';
+  const isCancelAvailable = currentStatus === 'CONFIRMED' || currentStatus === 'CHECKED_IN';
   const showIdWarning = isCheckInAvailable && guestDocumentStatus === 'PENDING';
+
+  function handleCancel() {
+    if (!confirm("Are you sure you want to cancel this reservation? This cannot be undone.")) return;
+    handleStatusChange('CANCELLED');
+  }
 
   return (
     <div className="space-y-4">
@@ -79,6 +85,16 @@ export function StatusForm({
 
         {!isCheckInAvailable && !isCheckOutAvailable && (
           <p className="text-sm text-gray-500">No primary operations available for current state.</p>
+        )}
+
+        {isCancelAvailable && (
+          <button
+            onClick={handleCancel}
+            disabled={loading}
+            className="w-full flex justify-center py-2 px-4 border border-red-200 rounded shadow-sm text-sm font-medium text-red-600 bg-white hover:bg-red-50 disabled:opacity-50 mt-3"
+          >
+            {loading ? "Processing..." : "Cancel Reservation"}
+          </button>
         )}
       </div>
     </div>

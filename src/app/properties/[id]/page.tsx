@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import Link from "next/link";
 import { AddRoomDrawer } from "./AddRoomDrawer";
 import { RoomRow } from "./RoomRow";
+import { EditPropertyForm } from "./EditPropertyForm";
 import { notFound } from "next/navigation";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -45,6 +46,11 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
       </div>
 
       <div className="space-y-4">
+        {isAdmin && (
+          <Card>
+            <CardHeader title="Property Information" action={<EditPropertyForm property={property} />} />
+          </Card>
+        )}
         <Card>
           <CardHeader title="Rooms" />
             <div className="divide-y divide-slate-100">

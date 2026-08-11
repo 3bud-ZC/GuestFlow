@@ -5,13 +5,13 @@ import { getPropertiesAndRooms, probeAirbnbUrl, connectExistingRoom, connectNewR
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { CheckCircle2, ChevronDown, ChevronRight, HelpCircle, Loader2, AlertCircle } from "lucide-react";
-import { useTranslation } from "@/lib/i18n/LocaleProvider";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 import { useRouter } from "next/navigation";
 
 export function AirbnbWizard() {
   const router = useRouter();
-  const t = useTranslation();
+  const { t, locale } = useLocale();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mode, setMode] = useState<"existing" | "new" | null>(null);
   
@@ -66,14 +66,14 @@ export function AirbnbWizard() {
     try {
       const res = await probeAirbnbUrl(icalUrl.trim());
       if (!res.healthy) {
-        // Show localized error if available
-        setError(res.error || "Could not reach the Airbnb calendar. Please verify the Export Calendar link and try again.");
+        const localized = locale === "ar" ? res.errorAr : res.error;
+        setError(localized || "Could not reach the Airbnb calendar. Please verify the Export Calendar link and try again.");
       } else {
         setProbeResult(res);
         setStep(3);
       }
     } catch (e: any) {
-      setError(e.message || "Could not reach the Airbnb calendar. Please verify the Export Calendar link and try again.");
+      setError("Could not reach the Airbnb calendar. Please verify the Export Calendar link and try again.");
     } finally {
       setProbing(false);
     }
@@ -89,20 +89,30 @@ export function AirbnbWizard() {
           setConnecting(false);
           return;
         }
-        await connectExistingRoom(selectedRoomId, icalUrl.trim());
+        const res = await connectExistingRoom(selectedRoomId, icalUrl.trim());
+        if (!res.success) {
+          setError(locale === "ar" ? res.errorAr : res.error);
+          setConnecting(false);
+          return;
+        }
       } else {
         if (!roomName.trim()) {
           setError("Please enter a room name.");
           setConnecting(false);
           return;
         }
-        await connectNewRoom(selectedPropertyId, roomName.trim(), icalUrl.trim());
+        const res = await connectNewRoom(selectedPropertyId, roomName.trim(), icalUrl.trim());
+        if (!res.success) {
+          setError(locale === "ar" ? res.errorAr : res.error);
+          setConnecting(false);
+          return;
+        }
       }
       // Navigate to the property page
       router.push(`/properties/${selectedPropertyId}`);
       router.refresh();
     } catch (e: any) {
-      setError(e.message || "Failed to connect calendar. Please try again.");
+      setError("Failed to connect calendar. Please try again.");
       setConnecting(false);
     }
   };

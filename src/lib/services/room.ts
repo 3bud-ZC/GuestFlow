@@ -21,16 +21,23 @@ export const roomService = {
 
   async createRoom(data: RoomInput) {
     const validData = RoomSchema.parse(data);
-    
+
     if (validData.airbnbIcalUrl) {
-      const { airbnbService } = await import('./airbnb');
+      const { airbnbService, AirbnbError } = await import('./airbnb');
       if (!airbnbService.validateUrl(validData.airbnbIcalUrl)) {
-        throw new Error("Invalid Airbnb calendar URL.");
+        throw new AirbnbError('AIRBNB_URL_INVALID', 'Invalid Airbnb calendar URL.', {
+          en: 'The Airbnb calendar link format is not valid. Please copy the link directly from Airbnb › Calendar › Export Calendar.',
+          ar: 'تنسيق رابط تقويم Airbnb غير صحيح. يرجى نسخ الرابط مباشرةً من Airbnb › التقويم › تصدير التقويم.',
+        });
       }
 
       const probeResult = await airbnbService.probe(validData.airbnbIcalUrl);
       if (!probeResult.healthy) {
-        throw new Error(probeResult.error || "Failed to connect to Airbnb calendar.");
+        throw new AirbnbError(
+          probeResult.errorCode ?? 'AIRBNB_FETCH_TIMEOUT',
+          probeResult.error ?? 'Failed to connect to Airbnb calendar.',
+          { en: probeResult.error ?? 'Failed to connect to Airbnb calendar.', ar: probeResult.errorAr ?? 'فشل الاتصال بتقويم Airbnb.' }
+        );
       }
 
       validData.airbnbListingId = probeResult.listingId || undefined;
@@ -40,7 +47,10 @@ export const roomService = {
         where: { airbnbIcalUrl: validData.airbnbIcalUrl }
       });
       if (existing) {
-        throw new Error("This Airbnb URL is already connected to another room.");
+        throw new AirbnbError('AIRBNB_DUPLICATE_LISTING', 'This Airbnb URL is already connected to another room.', {
+          en: 'This Airbnb calendar link is already connected to another room.',
+          ar: 'رابط تقويم Airbnb هذا متصل بالفعل بغرفة أخرى.',
+        });
       }
 
       if (validData.airbnbListingId) {
@@ -48,7 +58,10 @@ export const roomService = {
           where: { airbnbListingId: validData.airbnbListingId, airbnbIcalUrl: { not: null } }
         });
         if (existingListing) {
-          throw new Error("This Airbnb listing ID is already actively connected to another room.");
+          throw new AirbnbError('AIRBNB_DUPLICATE_LISTING', 'This Airbnb listing ID is already actively connected to another room.', {
+            en: 'This Airbnb listing is already actively connected to another room.',
+            ar: 'هذه الوحدة على Airbnb متصلة بالفعل بغرفة أخرى.',
+          });
         }
       }
     }
@@ -74,9 +87,12 @@ export const roomService = {
     const validData = RoomSchema.parse(data);
     
     if (validData.airbnbIcalUrl) {
-      const { airbnbService } = await import('./airbnb');
+      const { airbnbService, AirbnbError } = await import('./airbnb');
       if (!airbnbService.validateUrl(validData.airbnbIcalUrl)) {
-        throw new Error("Invalid Airbnb calendar URL.");
+        throw new AirbnbError('AIRBNB_URL_INVALID', 'Invalid Airbnb calendar URL.', {
+          en: 'The Airbnb calendar link format is not valid. Please copy the link directly from Airbnb › Calendar › Export Calendar.',
+          ar: 'تنسيق رابط تقويم Airbnb غير صحيح. يرجى نسخ الرابط مباشرةً من Airbnb › التقويم › تصدير التقويم.',
+        });
       }
     }
 
@@ -111,14 +127,21 @@ export const roomService = {
   },
 
   async connectAirbnbConnection(roomId: string, airbnbIcalUrl: string) {
-    const { airbnbService } = await import('./airbnb');
+    const { airbnbService, AirbnbError } = await import('./airbnb');
     if (!airbnbService.validateUrl(airbnbIcalUrl)) {
-      throw new Error("Invalid Airbnb calendar URL.");
+      throw new AirbnbError('AIRBNB_URL_INVALID', 'Invalid Airbnb calendar URL.', {
+        en: 'The Airbnb calendar link format is not valid. Please copy the link directly from Airbnb › Calendar › Export Calendar.',
+        ar: 'تنسيق رابط تقويم Airbnb غير صحيح. يرجى نسخ الرابط مباشرةً من Airbnb › التقويم › تصدير التقويم.',
+      });
     }
 
     const probeResult = await airbnbService.probe(airbnbIcalUrl);
     if (!probeResult.healthy) {
-      throw new Error(probeResult.error || "Failed to connect to Airbnb calendar.");
+      throw new AirbnbError(
+        probeResult.errorCode ?? 'AIRBNB_FETCH_TIMEOUT',
+        probeResult.error ?? 'Failed to connect to Airbnb calendar.',
+        { en: probeResult.error ?? 'Failed to connect to Airbnb calendar.', ar: probeResult.errorAr ?? 'فشل الاتصال بتقويم Airbnb.' }
+      );
     }
 
     const airbnbListingId = probeResult.listingId || null;
@@ -128,7 +151,10 @@ export const roomService = {
       where: { airbnbIcalUrl }
     });
     if (existingUrl && existingUrl.id !== roomId) {
-      throw new Error("This Airbnb URL is already connected to another room.");
+      throw new AirbnbError('AIRBNB_DUPLICATE_LISTING', 'This Airbnb URL is already connected to another room.', {
+        en: 'This Airbnb calendar link is already connected to another room.',
+        ar: 'رابط تقويم Airbnb هذا متصل بالفعل بغرفة أخرى.',
+      });
     }
 
     if (airbnbListingId) {
@@ -136,7 +162,10 @@ export const roomService = {
         where: { airbnbListingId, airbnbIcalUrl: { not: null } }
       });
       if (existingListing && existingListing.id !== roomId) {
-        throw new Error("This Airbnb listing ID is already actively connected to another room.");
+        throw new AirbnbError('AIRBNB_DUPLICATE_LISTING', 'This Airbnb listing ID is already actively connected to another room.', {
+          en: 'This Airbnb listing is already actively connected to another room.',
+          ar: 'هذه الوحدة على Airbnb متصلة بالفعل بغرفة أخرى.',
+        });
       }
     }
 

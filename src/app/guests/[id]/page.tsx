@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GuestDocumentStatus } from "@prisma/client";
 import { IDStatusForm } from "./IDStatusForm";
+import { EditGuestForm } from "./EditGuestForm";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ArrowLeft, UserCircle2, Mail, Phone, Globe2, Languages, CalendarDays, MapPin } from "lucide-react";
@@ -46,7 +47,7 @@ export default async function GuestDetailsPage({ params }: { params: Promise<{ i
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1 space-y-6">
           <Card>
-            <CardHeader title="Contact & Profile" />
+            <CardHeader title="Contact & Profile" action={<EditGuestForm guest={guest} />} />
             <CardContent className="p-0">
               <div className="divide-y divide-slate-100">
                 <div className="p-4 sm:p-5 flex items-start gap-3">
